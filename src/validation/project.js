@@ -46,6 +46,14 @@ export function validateProject(projectDir, { repoPaths = paths } = {}) {
   if (!project) return result();
 
   for (const e of validateAgainst("project", project)) {
+    if (e.instancePath === "/rendering/dimension") {
+      issues.push({
+        level: "error",
+        code: "not-2d",
+        message: `rendering.dimension es "${project.rendering.dimension}": VideoFactory solo admite producción 2D ("2d")`,
+      });
+      continue;
+    }
     issues.push({ level: "error", code: "schema", message: `project.json${e.instancePath || ""}: ${e.message}` });
   }
   if (issues.length) return result();

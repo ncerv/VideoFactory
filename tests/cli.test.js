@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { REPO_ROOT } from "../src/orchestrator/paths.js";
@@ -60,4 +61,22 @@ test("vf project validate falla en una carpeta sin project.json", () => {
   const res = JSON.parse(r.stdout);
   assert.equal(res.ok, false);
   assert.equal(res.issues[0].code, "missing-manifest");
+});
+
+test("vf project validate rechaza un proyecto 3D (código de salida 1)", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "vf-cli-3d-"));
+  try {
+    const dir = path.join(tmp, "proyecto-3d");
+    fs.cpSync(path.join(REPO_ROOT, "projects", "example-minimal"), dir, { recursive: true });
+    const project = JSON.parse(fs.readFileSync(path.join(dir, "project.json"), "utf8"));
+    project.id = "proyecto-3d";
+    project.rendering.dimension = "3d";
+    fs.writeFileSync(path.join(dir, "project.json"), JSON.stringify(project));
+    const r = vf("project", "validate", dir);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /\[not-2d\]/);
+    assert.match(r.stdout, /No válido/);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });

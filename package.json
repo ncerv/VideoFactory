@@ -24,6 +24,8 @@
     "hyperframes": "0.8.229"
   },
   "overrides": {
-    "undici": "7.30.1"
+    "hyperframes": {
+      "undici": "7.30.2"
+    }
   }
 }

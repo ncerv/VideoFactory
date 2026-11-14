@@ -28,12 +28,13 @@ test("un proyecto válido no tiene errores", () => {
   assert.equal(res.ok, true, JSON.stringify(res.issues));
 });
 
-test("rechaza dimension distinta de 2d", () => {
+test("rechaza un proyecto 3D con un error explícito", () => {
   const p = base();
   p.rendering.dimension = "3d";
   const res = validateProject(makeProject("tres-d", p, { "storyboard.json": storyboard }));
   assert.equal(res.ok, false);
-  assert.ok(codes(res).includes("schema"));
+  assert.deepEqual(codes(res), ["not-2d"]);
+  assert.match(res.issues[0].message, /solo admite producción 2D/);
 });
 
 test("rechaza un estilo no registrado", () => {

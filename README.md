@@ -69,6 +69,37 @@ En Windows se puede usar «Enviar a → Carpeta comprimida» sobre la carpeta. E
 
 ## Decisiones técnicas de esta entrega
 
-- **Versiones fijadas:** `hyperframes@0.8.229`, `gsap@3.15.0` (la versión que usa HyperFrames) y `ajv@8.20.0`. Además, un `override` fija `undici@7.30.1` para corregir vulnerabilidades de la versión que trae HyperFrames.
+- **Versiones fijadas:** todas las dependencias directas usan versión exacta. El detalle está en [Dependencias](#dependencias).
 - **GSAP local:** las composiciones cargan `vendor/gsap.min.js`. Los CDNs pueden estar bloqueados (`cdn.jsdelivr.net` lo está en el entorno remoto) y hacen el render dependiente de la red.
 - **Sin telemetría:** el adaptador ejecuta HyperFrames con `HYPERFRAMES_NO_TELEMETRY=1`. No se usa `hyperframes publish`.
+
+## Dependencias
+
+| Paquete | Versión | Notas |
+|---|---|---|
+| `hyperframes` | **0.8.229** | **Base provisional del motor.** No se actualiza hasta evaluar la compatibilidad con HyperFrames 0.9.46 (ver abajo). |
+| `gsap` | 3.15.0 | Misma versión que empaqueta HyperFrames 0.8.229. Licencia: GSAP Standard "no charge" (https://gsap.com/standard-license). |
+| `ajv` | 8.20.0 | Validación de los esquemas JSON (2020-12). |
+| `undici` (transitiva) | 7.30.2 | Forzada por un override **acotado a `hyperframes`** (`"overrides": { "hyperframes": { "undici": "7.30.2" } }`). |
+
+### Override de seguridad de `undici`
+
+HyperFrames 0.8.229 declara `undici` con versión exacta **7.25.0**, afectada por varias vulnerabilidades publicadas. El override la sustituye por **7.30.2**, que incluye las correcciones publicadas el 5 de noviembre de 2026 sobre 7.30.1.
+
+- Es el mismo número mayor (7.x), así que la API es compatible por semver.
+- Solo afecta al árbol de `hyperframes`, que es el único paquete que depende de `undici`.
+- HyperFrames solo usa `undici` en `fetchPublic` (`Agent` + `fetch` con una resolución DNS propia) para descargar recursos remotos. `tests/dependencies.test.js` ejercita esa misma API con la versión resuelta, y `npm run test:render` verifica que el render sigue funcionando.
+- El override debe revisarse, y retirarse si deja de ser necesario, en cada actualización de HyperFrames.
+
+### GSAP local y licencia
+
+`vendorGsap()` (`src/adapters/hyperframes.js`) copia `node_modules/gsap/dist/gsap.min.js` **sin modificarlo** a `compositions/vendor/`. Así se conserva su cabecera `@license`. Junto a la copia escribe `vendor/gsap.LICENSE.txt` con la versión y la licencia. La carpeta `vendor/` se genera en cada render y no se versiona.
+
+### Evaluación pendiente: HyperFrames 0.9.46
+
+Antes de actualizar el motor hay que:
+
+1. Revisar los cambios entre 0.8.229 y 0.9.46: CLI (`render`, `lint`), formato de composición y versión de GSAP empaquetada.
+2. Comprobar las dependencias de 0.9.46, en particular la versión de `undici`, y decidir si el override sigue haciendo falta.
+3. Actualizar en una rama aparte, ejecutar `npm test`, `npm run test:render` y `npm audit`, y comparar visualmente el render de `projects/example-minimal`.
+4. Si se cambia de versión de GSAP, mantenerla alineada con la que use HyperFrames.

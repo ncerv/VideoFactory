@@ -72,9 +72,22 @@ export function render({ compositionDir, outputFile, entry = null, stdio = "pipe
  */
 export function vendorGsap(compositionDir) {
   const src = require.resolve("gsap/dist/gsap.min.js", { paths: [REPO_ROOT] });
+  const pkg = JSON.parse(fs.readFileSync(require.resolve("gsap/package.json", { paths: [REPO_ROOT] }), "utf8"));
   const destDir = path.join(compositionDir, "vendor");
   fs.mkdirSync(destDir, { recursive: true });
   const dest = path.join(destDir, "gsap.min.js");
+  // Copia íntegra: conserva la cabecera @license original del archivo.
   fs.copyFileSync(src, dest);
+  // Aviso de licencia explícito junto a la copia.
+  fs.writeFileSync(
+    path.join(destDir, "gsap.LICENSE.txt"),
+    [
+      `GSAP ${pkg.version} (${pkg.homepage})`,
+      "Copyright GreenSock. Todos los derechos reservados.",
+      `Licencia: ${pkg.license}`,
+      "Copia local generada por VideoFactory desde el paquete npm `gsap` (sin modificaciones).",
+      "",
+    ].join("\n"),
+  );
   return dest;
 }

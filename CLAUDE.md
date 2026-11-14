@@ -18,6 +18,8 @@
 - **No inventar contenido editorial.** El documento del perfil `latin-american-legends` se incorporará íntegro más adelante.
 - **Sin CDNs** en las composiciones: GSAP se carga desde `vendor/` (ver `vendorGsap` en `src/adapters/hyperframes.js`).
 - **Dependencias con versión exacta** (`--save-exact`), elegidas entre publicaciones con algo de recorrido. Ejecutar `npm audit` después de cada cambio.
+- **HyperFrames 0.8.229 es la base provisional.** No actualizarlo sin evaluar antes la compatibilidad con 0.9.46 (pasos en README → Dependencias).
+- **Override de seguridad:** `undici` se fuerza a 7.30.2 solo dentro de `hyperframes`. Revisarlo en cada actualización del motor. No añadir overrides globales ni subir versiones mayores para silenciar `npm audit`.
 - **No versionar** binarios pesados, renders, modelos ni secretos (ver `.gitignore`).
 - **Sin rutas absolutas** en el código. Las rutas se resuelven desde `src/orchestrator/paths.js`.
 
