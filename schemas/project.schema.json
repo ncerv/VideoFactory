@@ -52,7 +52,22 @@
         "entry": {
           "type": "string",
           "default": "compositions/index.html",
-          "description": "Composición HyperFrames principal, relativa a la carpeta del proyecto."
+          "description": "Composición HyperFrames principal, relativa a la carpeta del proyecto. Si hay source, es la salida de vf build."
+        },
+        "source": {
+          "type": "string",
+          "pattern": "\\.m?js$",
+          "description": "Módulo de escena (scene.js) del que vf build genera la composición."
+        },
+        "timing": {
+          "type": "string",
+          "default": "timing.json",
+          "description": "Configuración temporal de la escena, relativa al proyecto."
+        },
+        "buildDir": {
+          "type": "string",
+          "default": "build",
+          "description": "Carpeta generada por vf build (no se versiona)."
         }
       }
     },

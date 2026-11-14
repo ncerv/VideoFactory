@@ -55,7 +55,8 @@ test("ninguna composición del repositorio carga scripts desde un CDN", () => {
   const walk = (d) => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name);
-      if (e.isDirectory() && e.name !== "node_modules" && e.name !== "vendor") walk(p);
+      // build/ y output/ son generados (los cubre tests/rendering.test.js)
+      if (e.isDirectory() && !["node_modules", "vendor", "build", "output"].includes(e.name)) walk(p);
       else if (e.name.endsWith(".html")) htmls.push(p);
     }
   };
@@ -64,7 +65,9 @@ test("ninguna composición del repositorio carga scripts desde un CDN", () => {
   for (const f of htmls) {
     const html = fs.readFileSync(f, "utf8");
     assert.doesNotMatch(html, /<script[^>]+src=["'](https?:)?\/\//i, path.relative(paths.root, f));
-    if (/gsap\./.test(html)) assert.match(html, /<script src="vendor\/gsap\.min\.js"><\/script>/, path.relative(paths.root, f));
+    // Los documentos de entrada cargan GSAP local; las subcomposiciones (<template>) lo heredan de la raíz.
+    const isEntry = !/^\s*<template>/.test(html);
+    if (isEntry && /gsap\./.test(html)) assert.match(html, /<script src="vendor\/gsap\.min\.js"><\/script>/, path.relative(paths.root, f));
   }
 });
 

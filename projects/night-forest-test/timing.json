@@ -1,0 +1,24 @@
+{
+  "$comment": "Configuración temporal de la escena (segundos). La geometría y los colores están en scene.js.",
+  "duration": 10,
+  "fps": 30,
+  "seed": 20261114,
+  "camera": { "start": 0, "duration": 10, "ease": "sine.inOut", "push": 0.11, "panX": 0.014, "panY": 0, "depthCurve": 1.2 },
+  "fog": {
+    "far": { "dx": [0, 70] },
+    "mid": { "dx": [0, -120] },
+    "near": { "dx": [-60, 150] }
+  },
+  "cloud": { "dx": [-900, 160] },
+  "light": {
+    "haloCycle": 5.2,
+    "shaftCycle": 3.6,
+    "dim": { "start": 3.4, "full": 4.9, "hold": 1.1, "release": 1.8, "level": 0.5 }
+  },
+  "stars": { "cycles": [2.4, 3.2, 2.8] },
+  "fireflies": { "hop": [1.4, 2.6], "flickerHop": [0.35, 1.0] },
+  "motes": { "hop": [2.4, 3.8] },
+  "ferns": { "amplitude": [1.0, 2.4], "cycle": [3.2, 4.8] },
+  "eyes": { "appear": 5.7, "fadeIn": 0.9, "blinks": [6.7, 7.95], "vanish": 8.7, "fadeOut": 0.7 },
+  "grain": { "fps": 12, "amount": 36 }
+}

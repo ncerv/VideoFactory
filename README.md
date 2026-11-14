@@ -2,7 +2,7 @@
 
 Motor de producción de vídeo **2D**. Node.js orquesta el trabajo, **HyperFrames** compone y renderiza con Chromium y **FFmpeg** procesa y exporta. Los servicios de IA (voz, música y alineación) son procesos Python independientes.
 
-> **Estado: primera entrega (v0.1.0).** Incluye la base del proyecto, el CLI `vf` (`--version`, `doctor`, `project validate`), los esquemas, el registro de estilos, las interfaces de los servicios de IA y la Skill `video-production`. Los motores de storyboard, assets, audio y composición están pendientes.
+> **Estado (v0.1.0):** base del proyecto, CLI `vf` (`--version`, `doctor`, `project validate`, `build`, `render`), esquemas, registro de estilos, interfaces de los servicios de IA, Skill `video-production` y **primera versión del motor visual 2D**, probada con la escena [`projects/night-forest-test`](projects/night-forest-test/README.md). Los motores de storyboard, assets y audio están pendientes.
 
 ## Requisitos
 
@@ -21,9 +21,32 @@ npx vf --version
 npx vf doctor                                   # herramientas, versiones y limitaciones
 npx vf doctor --network                         # además comprueba el acceso a hosts externos
 npx vf project validate projects/example-minimal
+npx vf build projects/night-forest-test         # genera la composición HyperFrames desde scene.js + timing.json
+npx vf render projects/night-forest-test        # build + check + render + verificación + hoja de contacto
 npm test                                        # pruebas unitarias
-npm run test:render                             # prueba de integración: render real con HyperFrames
+npm run test:render                             # integración: render real con HyperFrames (~1-2 min sin GPU)
 ```
+
+## Motor visual 2D
+
+Una escena se describe con código y se genera de forma determinista:
+
+```
+projects/<id>/scene.js + timing.json
+        │  vf build (Node: geometría SVG con semilla desde library/components)
+        ▼
+build/index.html + compositions/<escena>.html + vendor/{gsap, vf-textures, vf-motion}.js
+        │  vf render
+        ▼
+hyperframes check → hyperframes render (Chromium + FFmpeg) → ffprobe + continuidad + auditoría → output/
+```
+
+- **Geometría:** componentes de `library/components` (árboles, sendero, luna, haces, partículas…). Son funciones puras con semilla.
+- **Texturas:** `library/materials/vf-textures.js` pinta Canvas procedurales (cielo con *dithering*, niebla fBm, grano) al cargar la escena.
+- **Movimiento:** `library/motion/vf-motion.js` convierte especificaciones declarativas en tweens GSAP deterministas (cámara 2D por parallax, deriva, oscilación, balanceo, deambular, secuencias).
+- **Verificación:** resolución, fps, número exacto de fotogramas, duración, códec, continuidad entre fotogramas y ausencia de recursos externos. El resultado queda en `output/render-report.json`.
+
+Los vídeos, las hojas de contacto y `build/` se generan y no se versionan.
 
 ## Arquitectura
 

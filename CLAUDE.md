@@ -22,6 +22,8 @@
 - **Override de seguridad:** `undici` se fuerza a 7.30.2 solo dentro de `hyperframes`. Revisarlo en cada actualización del motor. No añadir overrides globales ni subir versiones mayores para silenciar `npm audit`.
 - **No versionar** binarios pesados, renders, modelos ni secretos (ver `.gitignore`).
 - **Sin rutas absolutas** en el código. Las rutas se resuelven desde `src/orchestrator/paths.js`.
+- **Escenas visuales:** todo elemento se genera con código (SVG, Canvas procedural, CSS, GSAP). No se usan imágenes externas, fotografías, imágenes generadas por IA ni 3D. La geometría y la aleatoriedad llevan semilla. El movimiento sigue el contrato de HyperFrames: sin `Math.random` sin semilla, `Date.now`, `performance.now`, temporizadores ni `repeat: -1`. `hyperframes check` debe pasar sin errores antes de renderizar.
+- **No versionar** `projects/*/build/` ni `projects/*/output/` (vídeos, hojas de contacto, informes).
 
 ## Skill portable `.claude/skills/video-production/`
 
@@ -37,6 +39,8 @@ npm install
 npx vf --version
 npx vf doctor [--json] [--network]
 npx vf project validate <dir> [--json]
+npx vf build <proyecto>                 # scene.js + timing.json → build/ (HyperFrames)
+npx vf render <proyecto> [--quality draft|looks|delivery] [--workers n]
 npm test              # pruebas unitarias (node:test)
 npm run test:render   # render real con HyperFrames (requiere Chromium y FFmpeg)
 ```

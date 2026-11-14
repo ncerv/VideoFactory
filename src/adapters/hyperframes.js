@@ -58,10 +58,32 @@ export async function lint(compositionDir) {
   return { ok: code === 0, result, output };
 }
 
-/** Renderiza una composición a MP4 con `hyperframes render`. */
-export function render({ compositionDir, outputFile, entry = null, stdio = "pipe" }) {
+/**
+ * Verificación completa de HyperFrames (`hyperframes check --json`): lint, errores de ejecución,
+ * encuadre, movimiento y "craft". El contraste WCAG se omite por defecto (escenas sin texto).
+ */
+export async function check(compositionDir, { contrast = false, samples = 9 } = {}) {
+  const args = ["check", ".", "--json", `--samples=${samples}`];
+  if (!contrast) args.push("--no-contrast");
+  const { code, output } = await runHyperframes(args, { cwd: compositionDir });
+  let result = null;
+  try {
+    result = JSON.parse(output.slice(output.indexOf("{")));
+  } catch {
+    /* salida no JSON */
+  }
+  return { ok: code === 0 && Boolean(result?.ok), result, output: result ? null : output };
+}
+
+/**
+ * Renderiza una composición a MP4 con `hyperframes render`.
+ * quality: draft | looks (CRF 16, por defecto) | delivery; workers: número o "auto".
+ */
+export function render({ compositionDir, outputFile, entry = null, quality = null, workers = null, stdio = "pipe" }) {
   const args = ["render", "-o", path.resolve(outputFile)];
   if (entry) args.push("-c", entry);
+  if (quality) args.push("--quality", quality);
+  if (workers) args.push("--workers", String(workers));
   return runHyperframes(args, { cwd: compositionDir, stdio });
 }
 

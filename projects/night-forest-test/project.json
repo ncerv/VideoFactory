@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schemas/project.schema.json",
+  "schemaVersion": 1,
+  "id": "night-forest-test",
+  "title": "Prueba del motor visual: bosque nocturno",
+  "description": "Escena de prueba 2D de 10 s (1080×1920, 30 fps) construida solo con SVG, Canvas procedural, CSS y GSAP sobre HyperFrames. No es contenido editorial.",
+  "language": "es",
+  "artStyle": "paper-cutout",
+  "output": { "width": 1080, "height": 1920, "fps": 30, "format": "mp4" },
+  "rendering": {
+    "engine": "hyperframes",
+    "dimension": "2d",
+    "source": "scene.js",
+    "timing": "timing.json",
+    "buildDir": "build",
+    "entry": "build/index.html"
+  },
+  "storyboard": "storyboard.json"
+}

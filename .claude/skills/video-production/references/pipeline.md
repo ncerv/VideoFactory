@@ -6,8 +6,8 @@
 | 2 | Storyboard: escenas, duraciones, narración | `src/storyboard` | Pendiente |
 | 3 | Assets 2D: ilustraciones, texturas, tipografías | `src/assets` | Pendiente |
 | 4 | Audio: voz (TTS), música, alineación y mezcla | `src/audio` + servicios Python + FFmpeg | Pendiente |
-| 5 | Composición: HTML de HyperFrames por escena | `src/rendering` + `library/` | Pendiente |
-| 6 | Render a MP4 | HyperFrames (Chromium) | ✅ Adaptador básico |
+| 5 | Composición: HTML de HyperFrames por escena | `src/rendering` + `library/` | ✅ Primera versión (`vf build`) |
+| 6 | Render a MP4 y verificación | HyperFrames (Chromium) + FFmpeg | ✅ `vf render` |
 | 7 | Exportación final: mezcla, normalización, formatos | FFmpeg | Pendiente |
 
 ## Estructura de un proyecto

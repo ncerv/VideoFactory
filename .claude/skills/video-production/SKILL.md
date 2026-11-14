@@ -27,6 +27,8 @@ Skill portable para producir vídeo **2D** con el motor VideoFactory. Funciona i
 2. **Preparar el proyecto.** Copia las plantillas de [templates/](templates/) a `projects/<id>/`. La composición va en `compositions/index.html`. Ajusta `id`, `title`, `artStyle` y `output`.
 3. **Validar** con `npx vf project validate projects/<id>` y corrige todos los errores antes de renderizar.
 4. **Componer y renderizar** con HyperFrames siguiendo [references/hyperframes.md](references/hyperframes.md).
+   - Escenas generadas por código (`scene.js` + `timing.json`): `npx vf build projects/<id>` y `npx vf render projects/<id>`.
+   - `vf render` ejecuta `hyperframes check`, renderiza y verifica el MP4 (resolución, fps, número de fotogramas, duración, continuidad y ausencia de recursos externos). Además genera `output/contact-sheet.jpg`: revísala antes de dar el trabajo por bueno.
 
 ## Reglas obligatorias
 
@@ -34,6 +36,7 @@ Skill portable para producir vídeo **2D** con el motor VideoFactory. Funciona i
 - **HyperFrames es el motor visual y de composición.** No lo sustituyas por capturas propias con Playwright y FFmpeg. Playwright solo se usa para pruebas.
 - **FFmpeg** se usa para procesar, mezclar y exportar.
 - **Node.js 22+** orquesta el trabajo. **Python 3.12 con uv** se usa solo en servicios de IA aislados.
+- **Todo lo visual se genera con código** (SVG, Canvas procedural, CSS, GSAP): sin imágenes externas, fotografías ni imágenes generadas por IA. La profundidad se simula con capas, escala, opacidad, luz y parallax 2D.
 - **Sin CDNs en las composiciones.** GSAP y cualquier otra librería se cargan desde una copia local (`vendor/`).
 - **Sin telemetría ni publicación.** Ejecuta HyperFrames con `HYPERFRAMES_NO_TELEMETRY=1` y no uses `hyperframes publish`, que sube el proyecto a un servicio externo.
 - **No inventes contenido editorial.** Si un perfil tiene el estado `awaiting-editorial-document`, su documento todavía no existe: no lo reconstruyas.

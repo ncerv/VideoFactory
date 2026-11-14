@@ -21,6 +21,8 @@ models/
 projects/*/output/
 projects/*/work/
 projects/*/compositions/vendor/
+projects/*/build/
+.hyperframes/
 renders/
 *.mp4
 *.mov

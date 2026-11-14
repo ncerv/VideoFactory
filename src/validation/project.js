@@ -100,13 +100,37 @@ export function validateProject(projectDir, { repoPaths = paths } = {}) {
     }
   }
 
+  // Escena generada: módulo fuente y configuración temporal.
+  const generated = Boolean(project.rendering.source);
+  if (generated) {
+    for (const [field, rel] of [["source", project.rendering.source], ["timing", project.rendering.timing ?? "timing.json"]]) {
+      const p = insideDir(dir, rel);
+      if (!p) issues.push({ level: "error", code: "path-outside-project", message: `rendering.${field} "${rel}" sale de la carpeta del proyecto` });
+      else if (!fs.existsSync(p)) issues.push({ level: "error", code: `missing-${field}`, message: `No existe rendering.${field}: ${rel}` });
+    }
+    const timingPath = insideDir(dir, project.rendering.timing ?? "timing.json");
+    if (timingPath && fs.existsSync(timingPath)) {
+      const timing = readJsonFile(timingPath, issues, project.rendering.timing ?? "timing.json");
+      if (timing) {
+        if (!(timing.duration > 0)) issues.push({ level: "error", code: "timing-duration", message: "timing.json debe definir duration > 0" });
+        if (timing.fps !== undefined && timing.fps !== project.output.fps) {
+          issues.push({ level: "error", code: "timing-fps", message: `timing.fps (${timing.fps}) no coincide con output.fps (${project.output.fps})` });
+        }
+      }
+    }
+  }
+
   // Composición de entrada de HyperFrames.
-  const entry = project.rendering.entry ?? "compositions/index.html";
+  const entry = project.rendering.entry ?? (generated ? `${project.rendering.buildDir ?? "build"}/index.html` : "compositions/index.html");
   const entryPath = insideDir(dir, entry);
   if (!entryPath) {
     issues.push({ level: "error", code: "path-outside-project", message: `rendering.entry "${entry}" sale de la carpeta del proyecto` });
   } else if (!fs.existsSync(entryPath)) {
-    issues.push({ level: "warning", code: "missing-entry", message: `No existe la composición de entrada ${entry} (necesaria para renderizar)` });
+    issues.push(
+      generated
+        ? { level: "info", code: "not-built", message: `La composición ${entry} se genera con \`vf build\`` }
+        : { level: "warning", code: "missing-entry", message: `No existe la composición de entrada ${entry} (necesaria para renderizar)` },
+    );
   }
 
   // Storyboard.

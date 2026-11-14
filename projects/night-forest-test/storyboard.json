@@ -1,0 +1,13 @@
+{
+  "$schema": "../../schemas/storyboard.schema.json",
+  "schemaVersion": 1,
+  "scenes": [
+    {
+      "id": "night-forest",
+      "title": "Bosque nocturno",
+      "durationSeconds": 10,
+      "visualNotes": "Plano único. La cámara avanza lentamente por el sendero hacia el punto de fuga; una nube vela la luna y atenúa los haces de luz; hacia el segundo 6 aparecen unos ojos entre los árboles, parpadean y desaparecen.",
+      "composition": "scene.js"
+    }
+  ]
+}
