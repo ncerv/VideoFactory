@@ -59,6 +59,18 @@ Flujo recomendado: iterar con `vf preview` y renderizar con `vf render` una sola
 
 Los vídeos, las hojas de contacto, `build/` y `build-preview/` se generan y no se versionan.
 
+## Motor de audio procedural
+
+Música y efectos generados solo por síntesis (Tone.js, render offline en Node), deterministas y verificados:
+
+```bash
+npx vf audio render projects/audio-engine-test   # mix.wav + stems/*.wav (48 kHz, 16 bits, estéreo) + audio-report.json + review.png
+```
+
+- **Generadores** (`library/audio`): drone, viento, pulso, resonancia, whoosh, impacto, espacio y eco.
+- **Motor** (`src/audio`): ruido y reverberaciones con semilla, WAV PCM con dither con semilla, fades, techo de pico, ducking por segmentos de voz y verificación (ffprobe, clipping, sonoridad `ebur128`, bandas y recursos externos).
+- **Voz TTS:** queda como subsistema independiente. El contrato de la mezcla audiovisual final está en `schemas/audio-mix.schema.json`.
+
 ## Arquitectura
 
 | Componente | Papel |
@@ -114,6 +126,8 @@ En Windows se puede usar «Enviar a → Carpeta comprimida» sobre la carpeta. E
 | `hyperframes` | **0.8.229** | **Base provisional del motor.** No se actualiza hasta evaluar la compatibilidad con HyperFrames 0.9.46 (ver abajo). |
 | `gsap` | 3.15.0 | Misma versión que empaqueta HyperFrames 0.8.229. Licencia: GSAP Standard "no charge" (https://gsap.com/standard-license). |
 | `ajv` | 8.20.0 | Validación de los esquemas JSON (2020-12). |
+| `tone` | 15.1.22 | Síntesis de audio y render offline (`Tone.Offline`). MIT. |
+| `node-web-audio-api` | 2.2.0 | Web Audio API nativa (Rust) para Node: permite `Tone.Offline` sin navegador. Incluye binarios para Linux, macOS y Windows. BSD-3-Clause. |
 | `undici` (transitiva) | 7.30.2 | Forzada por un override **acotado a `hyperframes`** (`"overrides": { "hyperframes": { "undici": "7.30.2" } }`). |
 
 ### Override de seguridad de `undici`

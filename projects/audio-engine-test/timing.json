@@ -1,0 +1,11 @@
+{
+  "$comment": "Configuración temporal de la composición (segundos). Alineada con la dramaturgia de night-forest-test.",
+  "duration": 10,
+  "seed": 20261115,
+  "drone": { "notes": ["A1", "E2"], "start": 0, "end": 10, "attack": 3.5, "release": 2.5, "gainDb": -15, "cutoff": 260, "lfo": { "rate": 0.08, "depth": 0.4 } },
+  "wind": { "start": 0, "end": 10, "attack": 2.2, "release": 2.5, "gainDb": -19, "center": [280, 1100], "gustStep": 1.15 },
+  "pulse": { "start": 3.4, "end": 9.3, "bpm": 52, "accelerando": 60, "intensity": [0.2, 0.85], "gainDb": -17, "pitch": 44 },
+  "resonance": { "at": 5.7, "note": "D#5", "gainDb": -19, "distance": 0.78, "pan": -0.35 },
+  "transition": { "start": 6.4, "duration": 2.3, "from": 180, "to": 1600, "gainDb": -22, "peakAt": 0.78 },
+  "space": { "seconds": 4, "decay": 3.4, "preDelay": 0.035, "damping": 0.65, "wet": 0.5, "seed": 11, "highcut": 5200 }
+}

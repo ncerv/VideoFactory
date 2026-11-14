@@ -10,6 +10,7 @@ import { formatValidation, validateProject } from "../validation/project.js";
 import { buildProject } from "../rendering/build.js";
 import { previewProject } from "../rendering/preview.js";
 import { checkBuild, renderProject, verifyProject } from "../rendering/render-project.js";
+import { renderAudioProject } from "../audio/render.js";
 
 const HELP = `vf — VideoFactory
 
@@ -28,6 +29,11 @@ Uso:
                                        Render final 1080×1920 + verificación de entrega + hoja de contacto.
                                        Si nada cambió desde el último render correcto, no vuelve a renderizar
   vf verify <dir> [--json]             Vuelve a verificar el MP4 final existente sin renderizar
+
+  Audio procedural (audio.json + timing.json + audio.js):
+  vf audio render <dir> [--force] [--json]
+                                       Renderiza offline con Tone.js mezcla y stems WAV (48 kHz, 16 bits,
+                                       estéreo) y los verifica. Si nada cambió, no vuelve a renderizar
 
 Opciones:
   --json      Salida en JSON
@@ -97,6 +103,22 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
     const res = validateProject(rest[0] ?? process.cwd());
     stdout.write(values.json ? `${JSON.stringify(res, null, 2)}\n` : `${formatValidation(res)}\n`);
     return res.ok ? 0 : 1;
+  }
+
+  if (command === "audio") {
+    const dir = rest[0];
+    if (sub !== "render" || !dir) {
+      stderr.write("Uso: vf audio render <carpeta-del-proyecto> [--force] [--json]\n");
+      return 2;
+    }
+    try {
+      const report = await renderAudioProject(dir, { force: Boolean(values.force), onStep: (name) => values.json || stderr.write(`· ${name}\n`) });
+      stdout.write(values.json ? `${JSON.stringify(report, null, 2)}\n` : `${formatAudioReport(report)}\n`);
+      return report.ok ? 0 : 1;
+    } catch (e) {
+      stderr.write(`Error: ${e.message}\n`);
+      return 1;
+    }
   }
 
   const SCENE_COMMANDS = ["build", "preview", "check", "render", "verify"];
@@ -182,6 +204,19 @@ export function formatRenderReport(r) {
   if (r.staleBuild) lines.push("  ✗ el vídeo no corresponde a la construcción actual: ejecuta vf render");
   if (!r.verifiedOnly) lines.push(`  render ${r.performance.renderSeconds} s · total ${r.timings.total} s · ${r.files.video} (${(p.sizeBytes / 1024 ** 2).toFixed(1)} MB) · ${r.files.contactSheet}`);
   else lines.push(`  ${r.files?.video ?? ""} · ${r.files?.contactSheet ?? ""}`);
+  return lines.join("\n");
+}
+
+/** Informe breve del render de audio: resultado, formato, nivel y solo los fallos en detalle. */
+export function formatAudioReport(r) {
+  if (r.cached) return `= ${r.project}: audio sin cambios (hash ${r.inputsHash}). ${r.files.mix}${Object.keys(r.files.stems).length ? ` + ${Object.keys(r.files.stems).length} stems` : ""} · usa --force para regenerar`;
+  const v = r.verification;
+  const p = v.probes[r.files.mix];
+  const head = `${r.ok ? "✓" : "✗"} audio ${r.project}: ${p.codec} · ${p.sampleRate} Hz · ${p.bitDepth} bits · ${p.channels} canales · ${p.frames} muestras (${p.duration.toFixed(3)} s)`;
+  const lines = [head, `  pico ${v.mix.peakDb} dBFS · ${v.loudness?.integratedLufs ?? "?"} LUFS · true peak ${v.loudness?.truePeakDb ?? "?"} dBTP · banda de voz ${v.voiceBandDb} dB · stems ${Object.keys(r.files.stems).join(", ") || "no"}`];
+  for (const c of v.checks.filter((x) => !x.ok)) lines.push(`  ✗ ${c.name}: ${c.detail}`);
+  for (const f of v.externalResources.findings.slice(0, 5)) lines.push(`  ✗ recurso ${f.kind}: ${f.value}`);
+  lines.push(`  ${r.timings.total} s · output/${r.files.mix}${v.review ? ` · output/${v.review}` : ""}`);
   return lines.join("\n");
 }
 

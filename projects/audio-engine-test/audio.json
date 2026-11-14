@@ -1,0 +1,16 @@
+{
+  "$schema": "../../schemas/audio-project.schema.json",
+  "schemaVersion": 1,
+  "id": "audio-engine-test",
+  "title": "Prueba del motor de audio: bosque nocturno",
+  "description": "Composición ambiental original de 10 s generada solo con síntesis (Tone.js, render offline). Inspirada en la escena visual night-forest-test, sin modificarla. No es contenido editorial.",
+  "source": "audio.js",
+  "timing": "timing.json",
+  "format": { "sampleRate": 48000, "bitDepth": 16, "channels": 2 },
+  "master": { "fadeIn": 1.2, "fadeOut": 1.8, "ceilingDb": -1.5 },
+  "stems": true,
+  "voice": {
+    "segments": [],
+    "ducking": { "roles": ["music", "ambience"], "amountDb": -8, "attack": 0.25, "release": 0.6 }
+  }
+}

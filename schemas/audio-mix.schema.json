@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://videofactory.local/schemas/audio-mix.schema.json",
+  "title": "Plan de mezcla audiovisual (contrato futuro)",
+  "description": "Hoja de mezcla final de un vídeo: pistas generadas (música, ambiente, efectos), narración segmentada del servicio TTS, eventos sincronizados con la imagen, ducking y normalización con FFmpeg. vf aún no la ejecuta; fija la interfaz para que la voz se incorpore sin tocar los generadores.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "duration", "tracks", "loudness"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "duration": { "type": "number", "exclusiveMinimum": 0 },
+    "video": { "type": "string", "description": "MP4 final de vf render (sin audio)." },
+    "tracks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "role", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "role": { "enum": ["music", "ambience", "sfx", "voice"] },
+          "source": {
+            "oneOf": [
+              { "type": "object", "additionalProperties": false, "required": ["type", "stem"], "properties": { "type": { "const": "stem" }, "stem": { "type": "string", "description": "Ruta a un WAV de output/stems/ generado por vf audio render." } } },
+              { "type": "object", "additionalProperties": false, "required": ["type", "segments"], "properties": { "type": { "const": "tts" }, "segments": { "type": "array", "items": { "type": "object", "required": ["id", "start", "file"], "properties": { "id": { "type": "string" }, "start": { "type": "number" }, "file": { "type": "string" }, "text": { "type": "string" } } } } } }
+            ]
+          },
+          "start": { "type": "number", "minimum": 0, "default": 0 },
+          "gainDb": { "type": "number", "default": 0 },
+          "duckedBy": { "type": "string", "description": "id de la pista que provoca el ducking (normalmente la voz)." }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "description": "Efectos asociados a acontecimientos de la escena (tiempos en segundos del vídeo).",
+      "items": { "type": "object", "required": ["at", "generator"], "properties": { "at": { "type": "number" }, "generator": { "type": "string" }, "params": { "type": "object" } } }
+    },
+    "ducking": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "amountDb": { "type": "number", "maximum": 0 }, "attack": { "type": "number" }, "release": { "type": "number" } }
+    },
+    "loudness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["integratedLufs", "truePeakDb"],
+      "properties": {
+        "integratedLufs": { "type": "number", "description": "Objetivo de normalización (FFmpeg loudnorm); -14 LUFS para redes sociales." },
+        "truePeakDb": { "type": "number", "maximum": 0 }
+      }
+    }
+  }
+}

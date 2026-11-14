@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://videofactory.local/schemas/audio-project.schema.json",
+  "title": "Proyecto de audio VideoFactory",
+  "description": "Manifiesto audio.json: composición procedural (música y efectos) renderizada offline con Tone.js. Convive con project.json en proyectos audiovisuales.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "title", "source", "format", "master"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$" },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "source": { "type": "string", "pattern": "\\.m?js$", "description": "Módulo de composición (audio.js)." },
+    "timing": { "type": "string", "default": "timing.json" },
+    "format": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sampleRate", "bitDepth", "channels"],
+      "properties": {
+        "sampleRate": { "enum": [44100, 48000] },
+        "bitDepth": { "enum": [16, 24] },
+        "channels": { "enum": [1, 2] }
+      }
+    },
+    "master": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fadeIn", "fadeOut", "ceilingDb"],
+      "properties": {
+        "fadeIn": { "type": "number", "minimum": 0 },
+        "fadeOut": { "type": "number", "minimum": 0 },
+        "ceilingDb": { "type": "number", "maximum": 0, "description": "Pico máximo de muestra en dBFS (protección contra clipping)." }
+      }
+    },
+    "stems": { "type": "boolean", "default": true, "description": "Exportar además cada stem por separado." },
+    "voice": {
+      "type": "object",
+      "description": "Narración (subsistema independiente). Los segmentos los aportará el servicio TTS; aquí solo se declaran tiempos y ducking.",
+      "additionalProperties": false,
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "start", "end"],
+            "properties": {
+              "id": { "type": "string" },
+              "start": { "type": "number", "minimum": 0 },
+              "end": { "type": "number", "minimum": 0 },
+              "text": { "type": "string" },
+              "file": { "type": "string", "description": "WAV generado por el servicio TTS (futuro)." }
+            }
+          }
+        },
+        "ducking": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "roles": { "type": "array", "items": { "enum": ["music", "ambience", "sfx"] } },
+            "amountDb": { "type": "number", "maximum": 0 },
+            "attack": { "type": "number", "minimum": 0 },
+            "release": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}

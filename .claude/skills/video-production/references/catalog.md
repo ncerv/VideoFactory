@@ -78,6 +78,47 @@ Reglas:
 - Dos patrones no pueden animar la misma propiedad del mismo elemento. Si lo necesitas, anida dos grupos: por ejemplo, `#x-dim` para `sequence` y dentro `#x-breath` para `oscillate`.
 - Las capas con `depth` las anima `camera`: no les apliques otros transforms y anima siempre sus hijos.
 
+## Audio procedural (`library/audio/index.js`, render con `vf audio render`)
+
+Proyecto de audio: `audio.json` (formato, master, stems, voz) + `timing.json` + `audio.js`. Ejemplo: `projects/audio-engine-test/`.
+
+```js
+// audio.js — solo describe qué suena y cuándo; la síntesis está en los generadores.
+export default function composition({ duration, sampleRate, timing: T, lib }) {
+  const room = (ctx) => ctx.lib.space(ctx, T.space);      // mismo espacio (misma semilla) en cada stem
+  return {
+    id: "mi-audio",
+    stems: [                                               // cada stem se renderiza por separado; mezcla = Σ stems
+      { id: "drone", role: "music", gainDb: 0, build: (ctx) => ctx.lib.drone(ctx, { ...T.drone, send: room(ctx) }) },
+      { id: "golpe", role: "sfx", build: (ctx) => ctx.lib.impact(ctx, { at: 4.2, gainDb: -12 }) },
+    ],
+  };
+}
+```
+
+- `role` puede ser `music`, `ambience` o `sfx`. Con `voice.segments`, la música y el ambiente se atenúan (ducking) y los `sfx` no.
+- `ctx` contiene `Tone`, `lib`, `out`, `rng` (con semilla), `noise(kind, s, seed)`, `duration`, `sampleRate` y `timing`.
+- **Convención de nivel:** `gainDb` ≈ pico del generador aislado.
+
+| Generador | Parámetros principales |
+|---|---|
+| `drone(ctx, o)` | `notes`, `start`, `end`, `attack`, `release`, `gainDb`, `wave`, `spread`, `count`, `cutoff`, `q`, `lfo:{rate, depth}`, `sub`, `pan`, `send`, `sendDb` |
+| `wind(ctx, o)` | `start`, `end`, `color` (white/pink/brown), `gainDb`, `center:[min,max]`, `q`, `gustStep`, `intensity:[a,b]`, `whistle:{freq:[a,b], q, gainDb}` o `null`, `panRate`, `seed`, `send` |
+| `pulse(ctx, o)` | `start`, `end`, `bpm`, `accelerando`, `pattern:[{offset, velocity}]`, `pitch` (Hz), `intensity:[from,to]`, `gainDb`, `lowpass`, `decay`, `send` |
+| `resonance(ctx, o)` | `at`, `note`, `gainDb`, `distance` (0..1), `beat`, `pan`, `partials`, `send` |
+| `whoosh(ctx, o)` | `start`, `duration`, `from`, `to` (Hz), `q`, `gainDb`, `peakAt`, `pan:[a,b]`, `color`, `seed`, `send` |
+| `impact(ctx, o)` | `at`, `gainDb`, `body` (Hz), `drop`, `decay`, `click`, `send` |
+| `space(ctx, o)` / `echo(ctx, o)` | `seconds`, `decay`, `preDelay`, `damping`, `wet`, `seed`, `highcut` / `time`, `feedback`, `wet`, `highcut`; devuelven el nodo de envío |
+
+**Reglas del audio:**
+
+- Nada de `Tone.Noise`, `Tone.Reverb`, `humanize` ni `probability`: usan `Math.random`, que el render bloquea. Para el ruido usa `ctx.noise`, y para la reverberación, `space`.
+- Nada de `Freeverb`, `JCReverb`, `FeedbackCombFilter` ni `BitCrusher`, que dependen de AudioWorklet.
+- Ni muestras ni URLs (`Tone.Player`, `Sampler`, `fetch`): la auditoría las rechaza.
+- En Tone, `a.connect(b)` devuelve `a`. Para encadenar usa `a.chain(b, c, out)`.
+
+**Revisión sin escuchar:** consulta en `output/audio-report.json` los campos `verification.spectrum` (energía por bandas), `voiceBandDb`, `loudness` y `stems[].peakDb/rmsDb`, y mira `output/review.png`. Ese espectrograma es orientativo; las medidas por bandas son las fiables.
+
 ## Coste de cada paso (4 CPU, sin GPU, 1080×1920, 10 s)
 
 | Paso | Tiempo |
@@ -88,3 +129,4 @@ Reglas:
 | `vf check` | ~9 s, o ~0,3 s si el contenido no cambió |
 | `vf render` | ~60 s, o ~0,3 s si nada cambió |
 | `vf verify` | ~4 s |
+| `vf audio render` (10 s, 5 stems) | ~4 s, o ~0,2 s si nada cambió |

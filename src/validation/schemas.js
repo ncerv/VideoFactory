@@ -10,6 +10,8 @@ export const SCHEMA_FILES = {
   profile: "profile.schema.json",
   artStyleRegistry: "art-style-registry.schema.json",
   serviceManifest: "service-manifest.schema.json",
+  audioProject: "audio-project.schema.json",
+  audioMix: "audio-mix.schema.json",
 };
 
 let ajv = null;

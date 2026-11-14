@@ -21,6 +21,7 @@ Skill portable para producir vídeo **2D** con el motor VideoFactory. Funciona i
 | Tarea | Ejemplos | Dónde se trabaja |
 |---|---|---|
 | **A. Crear o ajustar una escena** (la habitual) | Nueva escena, cambiar colores, tiempos, encuadre, capas o animaciones de un proyecto | Solo en `projects/<id>/`: `scene.js`, `timing.json` y los manifiestos |
+| **A′. Crear o ajustar el audio de una escena** | Música, ambiente o efectos con los generadores existentes; tiempos, niveles, stems | Solo en `projects/<id>/`: `audio.js`, `timing.json` y `audio.json` |
 | **B. Desarrollar el motor** (excepcional) | Componente o patrón de movimiento útil para varias escenas, nuevo comando, corregir un fallo del motor | `library/`, `src/`, `schemas/`, `tests/` |
 
 Ante la duda, es una tarea A. Pasa a B solo cuando una necesidad concreta no tenga solución con lo que ya existe **y** vaya a servir a otras escenas.
@@ -48,6 +49,14 @@ Ante la duda, es una tarea A. Pasa a B solo cuando una necesidad concreta no ten
 - Para volver a verificar un MP4 existente usa `npx vf verify`, que no vuelve a renderizar.
 - No reconsideres decisiones de arquitectura ya establecidas sin un problema concreto y demostrado.
 - **Informes breves.** Resultado, tiempos y errores. No repitas lo que ya muestran la CLI o el informe JSON.
+
+## A′. Audio de una escena
+
+1. Lee la sección de audio de [references/catalog.md](references/catalog.md) y el `audio.js` de `projects/audio-engine-test/`.
+2. Compón con los generadores de `library/audio` (drone, viento, pulso, resonancia, whoosh, impacto, espacio). Los tiempos van en `timing.json`; usa `gainDb` como pico aproximado de cada capa.
+3. `npx vf audio render projects/<id>` (~4 s) genera la mezcla y los stems y los verifica. Itera sobre él: es barato y no repite el render si nada cambió.
+4. Como no puedes escuchar, revisa `audio-report.json`: niveles por stem, energía por bandas, `voiceBandDb`, sonoridad y fades. Mira también `review.png`. Deja la banda de 300–3000 Hz despejada si habrá narración.
+5. Todo el audio se sintetiza: sin modelos generativos, bancos de sonidos, archivos descargados ni `Math.random`. La voz TTS es un subsistema aparte: solo se declaran sus segmentos en `audio.json → voice`.
 
 ## B. Desarrollar el motor
 
