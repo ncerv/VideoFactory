@@ -10,12 +10,22 @@ export const VENDOR_SCRIPTS = ["vendor/gsap.min.js", "vendor/vf-textures.js", "v
 
 const json = (v) => JSON.stringify(v).replace(/</g, "\\u003c");
 
+/** Dimensiones de salida para una escala de vista previa (pares, como exige H.264 yuv420p). */
+export function scaledSize(width, height, scale = 1) {
+  const even = (v) => Math.max(2, Math.round((v * scale) / 2) * 2);
+  return scale === 1 ? { width, height } : { width: even(width), height: even(height) };
+}
+
 /**
  * Archivo de escena (subcomposición).
  * @param scene { id, width, height, duration, css, defs, layers:[{id, depth, html, className?, attrs?}], motion:[...] }
+ * @param options.scale escala de salida para vistas previas (1 = producción). La escena se compone
+ *   siempre en coordenadas lógicas (width × height); con scale ≠ 1 el escenario se reduce con un
+ *   transform estático (GSAP nunca lo anima) y la composición declara las dimensiones reducidas.
  */
-export function sceneFile(scene) {
+export function sceneFile(scene, { scale = 1 } = {}) {
   const { id, width, height, duration } = scene;
+  const out = scaledSize(width, height, scale);
   const layers = scene.layers
     .map((l) => {
       const a = { id: l.id, class: ["vf-layer", l.className].filter(Boolean).join(" "), ...(l.attrs || {}) };
@@ -53,9 +63,9 @@ export function sceneFile(scene) {
       height: ${height}px;
       overflow: visible;
     }
-${scene.css}
+${scale === 1 ? "" : `    #root .vf-stage { position: absolute; left: 0; top: 0; width: ${width}px; height: ${height}px; transform: scale(${scale}); transform-origin: 0 0; }\n`}${scene.css}
   </style>
-  <div id="root" data-composition-id="${escapeAttr(id)}" data-width="${width}" data-height="${height}" data-duration="${duration}" data-layout-allow-overflow>
+  <div id="root" data-composition-id="${escapeAttr(id)}" data-width="${out.width}" data-height="${out.height}" data-duration="${duration}" data-layout-allow-overflow>
     <svg class="vf-defs" width="0" height="0" aria-hidden="true" style="position:absolute"><defs>${scene.defs}</defs></svg>
     <div id="${escapeAttr(id)}-stage" class="vf-stage">
 ${layers}
@@ -74,7 +84,7 @@ ${layers}
 `;
 }
 
-/** index.html raíz: monta las escenas en orden y carga los runtimes locales. */
+/** index.html raíz: monta las escenas en orden y carga los runtimes locales. width/height son los de salida. */
 export function rootFile({ title, width, height, fps, duration, background, scenes }) {
   const hosts = scenes
     .map(

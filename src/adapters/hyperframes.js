@@ -76,13 +76,32 @@ export async function check(compositionDir, { contrast = false, samples = 9 } = 
 }
 
 /**
- * Renderiza una composición a MP4 con `hyperframes render`.
- * quality: draft | looks (CRF 16, por defecto) | delivery; workers: número o "auto".
+ * Fotogramas en instantes concretos con `hyperframes snapshot --at … --no-end --json`.
+ * HyperFrames escribe los PNG y sus propias hojas de contacto rotuladas.
+ * @returns {{ ok, frames:[{path,time}], contactSheets:[path], output? }}
  */
-export function render({ compositionDir, outputFile, entry = null, quality = null, workers = null, stdio = "pipe" }) {
+export async function snapshot(compositionDir, { at, outputDir }) {
+  const args = ["snapshot", ".", "--at", at.join(","), "--no-end", "-o", path.resolve(outputDir), "--json"];
+  const { code, output } = await runHyperframes(args, { cwd: compositionDir });
+  let result = null;
+  try {
+    result = JSON.parse(output.slice(output.indexOf("{")));
+  } catch {
+    /* salida no JSON */
+  }
+  return { ok: code === 0 && Boolean(result?.ok), frames: result?.frames ?? [], contactSheets: result?.contactSheets ?? [], output: result ? null : output };
+}
+
+/**
+ * Renderiza una composición a MP4 con `hyperframes render`.
+ * quality: draft | looks (CRF 16, por defecto) | delivery; workers: número o "auto";
+ * fps: frecuencia de salida (1-240; por defecto la de la composición). Solo para vistas previas.
+ */
+export function render({ compositionDir, outputFile, entry = null, quality = null, workers = null, fps = null, stdio = "pipe" }) {
   const args = ["render", "-o", path.resolve(outputFile)];
   if (entry) args.push("-c", entry);
   if (quality) args.push("--quality", quality);
+  if (fps) args.push("--fps", String(fps));
   if (workers) args.push("--workers", String(workers));
   return runHyperframes(args, { cwd: compositionDir, stdio });
 }

@@ -22,7 +22,10 @@ npx vf doctor                                   # herramientas, versiones y limi
 npx vf doctor --network                         # además comprueba el acceso a hosts externos
 npx vf project validate projects/example-minimal
 npx vf build projects/night-forest-test         # genera la composición HyperFrames desde scene.js + timing.json
-npx vf render projects/night-forest-test        # build + check + render + verificación + hoja de contacto
+npx vf preview projects/night-forest-test       # revisión rápida: fotogramas clave a 540×960 (~7 s)
+npx vf preview projects/night-forest-test --video   # MP4 borrador a 540×960 y 15 fps (~16 s)
+npx vf render projects/night-forest-test        # final: check + render 1080×1920 + verificación + hoja de contacto (~60 s)
+npx vf verify projects/night-forest-test        # vuelve a verificar el MP4 final sin renderizar
 npm test                                        # pruebas unitarias
 npm run test:render                             # integración: render real con HyperFrames (~1-2 min sin GPU)
 ```
@@ -46,7 +49,15 @@ hyperframes check → hyperframes render (Chromium + FFmpeg) → ffprobe + conti
 - **Movimiento:** `library/motion/vf-motion.js` convierte especificaciones declarativas en tweens GSAP deterministas (cámara 2D por parallax, deriva, oscilación, balanceo, deambular, secuencias).
 - **Verificación:** resolución, fps, número exacto de fotogramas, duración, códec, continuidad entre fotogramas y ausencia de recursos externos. El resultado queda en `output/render-report.json`.
 
-Los vídeos, las hojas de contacto y `build/` se generan y no se versionan.
+Flujo recomendado: iterar con `vf preview` y renderizar con `vf render` una sola vez al final. `vf build`, `vf check` y `vf render` reutilizan su resultado anterior cuando el contenido generado es idéntico (hash); `--force` los rehace.
+
+| Modo | Resolución | FPS | Codificación | `hyperframes check` | Verificación de entrega |
+|---|---|---|---|---|---|
+| `vf preview` | 540×960 (escala 0,5 de la misma escena) | Instantes elegidos | PNG | No | No |
+| `vf preview --video` | 540×960 | 15 | `--quality draft` | No | No |
+| `vf render` | 1080×1920 | 30 | `--quality looks` (CRF 16) | Sí (en caché por contenido) | Sí |
+
+Los vídeos, las hojas de contacto, `build/` y `build-preview/` se generan y no se versionan.
 
 ## Arquitectura
 

@@ -22,6 +22,7 @@ projects/*/output/
 projects/*/work/
 projects/*/compositions/vendor/
 projects/*/build/
+projects/*/build-preview/
 .hyperframes/
 renders/
 *.mp4

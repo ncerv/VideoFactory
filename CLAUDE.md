@@ -23,7 +23,8 @@
 - **No versionar** binarios pesados, renders, modelos ni secretos (ver `.gitignore`).
 - **Sin rutas absolutas** en el código. Las rutas se resuelven desde `src/orchestrator/paths.js`.
 - **Escenas visuales:** todo elemento se genera con código (SVG, Canvas procedural, CSS, GSAP). No se usan imágenes externas, fotografías, imágenes generadas por IA ni 3D. La geometría y la aleatoriedad llevan semilla. El movimiento sigue el contrato de HyperFrames: sin `Math.random` sin semilla, `Date.now`, `performance.now`, temporizadores ni `repeat: -1`. `hyperframes check` debe pasar sin errores antes de renderizar.
-- **No versionar** `projects/*/build/` ni `projects/*/output/` (vídeos, hojas de contacto, informes).
+- **No versionar** `projects/*/build/`, `projects/*/build-preview/` ni `projects/*/output/` (vídeos, hojas de contacto, informes).
+- **Flujo de producción de escenas:** iterar con `vf preview` y renderizar con `vf render` una sola vez al final. Las tareas de escena se resuelven en `projects/<id>/`; el motor solo se amplía con piezas reutilizables (ver la Skill `video-production`, apartados A y B, y `references/catalog.md`).
 
 ## Skill portable `.claude/skills/video-production/`
 
@@ -39,8 +40,11 @@ npm install
 npx vf --version
 npx vf doctor [--json] [--network]
 npx vf project validate <dir> [--json]
-npx vf build <proyecto>                 # scene.js + timing.json → build/ (HyperFrames)
-npx vf render <proyecto> [--quality draft|looks|delivery] [--workers n]
+npx vf build <proyecto> [--force]       # scene.js + timing.json → build/ (no reescribe si nada cambió)
+npx vf preview <proyecto> [--at t1,t2] [--video]   # revisión rápida a 540×960 (fotogramas o MP4 borrador a 15 fps)
+npx vf check <proyecto> [--force]       # hyperframes check (en caché por hash de contenido)
+npx vf render <proyecto> [--quality draft|looks|delivery] [--workers n] [--force]   # render final + verificación
+npx vf verify <proyecto>                # vuelve a verificar el MP4 final sin renderizar
 npm test              # pruebas unitarias (node:test)
 npm run test:render   # render real con HyperFrames (requiere Chromium y FFmpeg)
 ```

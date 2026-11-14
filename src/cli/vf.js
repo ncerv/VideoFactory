@@ -8,25 +8,38 @@ import { formatDiagnostics, runDiagnostics } from "../orchestrator/environment.j
 import { REPO_ROOT } from "../orchestrator/paths.js";
 import { formatValidation, validateProject } from "../validation/project.js";
 import { buildProject } from "../rendering/build.js";
-import { renderProject } from "../rendering/render-project.js";
+import { previewProject } from "../rendering/preview.js";
+import { checkBuild, renderProject, verifyProject } from "../rendering/render-project.js";
 
 const HELP = `vf — VideoFactory
 
 Uso:
-  vf --version                        Muestra la versión
-  vf doctor [--json] [--network]      Diagnostica herramientas, versiones y limitaciones
-  vf project validate [dir] [--json]  Valida un proyecto (por defecto, la carpeta actual)
-  vf build <dir>                      Genera la composición HyperFrames desde scene.js + timing.json
-  vf render <dir> [--quality q] [--workers n] [--json]
-                                      Construye, verifica (hyperframes check), renderiza a MP4,
-                                      comprueba el resultado con ffprobe/FFmpeg y crea la hoja de contacto
-  vf --help                           Muestra esta ayuda
+  vf --version                         Muestra la versión
+  vf doctor [--json] [--network]       Diagnostica herramientas, versiones y limitaciones
+  vf project validate [dir] [--json]   Valida un proyecto (por defecto, la carpeta actual)
+
+  Producción de una escena (scene.js + timing.json), de más barato a más caro:
+  vf build <dir> [--force]             Genera la composición HyperFrames (no reescribe si nada cambió)
+  vf preview <dir> [--at t1,t2] [--frames n] [--video] [--fps n] [--scale s]
+                                       Vista previa rápida a 540×960: fotogramas + hojas de contacto
+                                       (por defecto) o MP4 borrador a 15 fps (--video). Sin check ni verificación
+  vf check <dir> [--force]             hyperframes check completo (resultado en caché por contenido)
+  vf render <dir> [--quality q] [--workers n] [--force] [--json]
+                                       Render final 1080×1920 + verificación de entrega + hoja de contacto.
+                                       Si nada cambió desde el último render correcto, no vuelve a renderizar
+  vf verify <dir> [--json]             Vuelve a verificar el MP4 final existente sin renderizar
 
 Opciones:
   --json      Salida en JSON
   --network   (doctor) Comprueba el acceso a hosts externos clave (solo abre conexiones TLS)
+  --force     (build, check, render) Rehace la etapa aunque el contenido no haya cambiado
   --quality   (render) draft | looks (por defecto, CRF 16) | delivery
   --workers   (render) Procesos de captura en paralelo (número o auto)
+  --at        (preview) Instantes en segundos separados por comas
+  --frames    (preview) Número de fotogramas repartidos (por defecto 8 o timing.preview.at)
+  --video     (preview) MP4 borrador en lugar de fotogramas
+  --fps       (preview --video) Fotogramas por segundo del borrador (por defecto 15)
+  --scale     (preview) Escala de la vista previa (por defecto 0.5)
 `;
 
 export function getVersion() {
@@ -46,6 +59,12 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
         network: { type: "boolean" },
         quality: { type: "string" },
         workers: { type: "string" },
+        force: { type: "boolean" },
+        at: { type: "string" },
+        frames: { type: "string" },
+        video: { type: "boolean" },
+        fps: { type: "string" },
+        scale: { type: "string" },
       },
     });
   } catch (e) {
@@ -80,40 +99,63 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
     return res.ok ? 0 : 1;
   }
 
-  if (command === "build") {
+  const SCENE_COMMANDS = ["build", "preview", "check", "render", "verify"];
+  if (SCENE_COMMANDS.includes(command)) {
     if (!sub) {
-      stderr.write("Uso: vf build <carpeta-del-proyecto>\n");
-      return 2;
-    }
-    const res = validateProject(sub);
-    if (!res.ok) {
-      stdout.write(`${formatValidation(res)}\n`);
-      return 1;
-    }
-    const built = await buildProject(sub);
-    stdout.write(`Composición generada en ${built.buildDir} (${built.files.join(", ")}) en ${Math.round(built.ms)} ms\n`);
-    return 0;
-  }
-
-  if (command === "render") {
-    if (!sub) {
-      stderr.write("Uso: vf render <carpeta-del-proyecto> [--quality draft|looks|delivery] [--workers n]\n");
+      stderr.write(`Uso: vf ${command} <carpeta-del-proyecto> (ver vf --help)\n`);
       return 2;
     }
     if (values.quality && !["draft", "looks", "delivery", "standard", "high"].includes(values.quality)) {
       stderr.write(`Calidad no válida: ${values.quality}\n`);
       return 2;
     }
+    const num = (v, name) => {
+      if (v === undefined) return undefined;
+      const n = Number(v);
+      if (!Number.isFinite(n) || n <= 0) throw Object.assign(new Error(`--${name} no válido: ${v}`), { usage: true });
+      return n;
+    };
+    const onStep = (name) => values.json || stderr.write(`· ${name}\n`);
     try {
-      const report = await renderProject(sub, {
-        quality: values.quality ?? "looks",
-        workers: values.workers ?? null,
-        onStep: (name) => values.json || stderr.write(`· ${name}\n`),
-      });
-      stdout.write(values.json ? `${JSON.stringify(report, null, 2)}\n` : `${formatRenderReport(report)}\n`);
-      return report.ok ? 0 : 1;
+      const res = validateProject(sub);
+      if (!res.ok) {
+        stdout.write(`${formatValidation(res)}\n`);
+        return 1;
+      }
+      if (command === "build") {
+        const built = await buildProject(sub, { force: Boolean(values.force) });
+        stdout.write(`${built.cached ? "= sin cambios" : "✓ generada"} ${path.relative(process.cwd(), built.buildDir)} (hash ${built.hash}, ${Math.round(built.ms)} ms)\n`);
+        return 0;
+      }
+      if (command === "preview") {
+        const at = values.at ? values.at.split(",").map((t) => Number(t.trim())) : null;
+        if (at?.some((t) => !Number.isFinite(t) || t < 0)) throw Object.assign(new Error(`--at no válido: ${values.at}`), { usage: true });
+        const scale = num(values.scale, "scale");
+        if (scale !== undefined && scale > 1) throw Object.assign(new Error("--scale debe estar entre 0 y 1"), { usage: true });
+        const summary = await previewProject(sub, { at, frames: num(values.frames, "frames"), video: Boolean(values.video), fps: num(values.fps, "fps"), scale, onStep });
+        stdout.write(values.json ? `${JSON.stringify(summary, null, 2)}\n` : `${formatPreview(summary)}\n`);
+        return 0;
+      }
+      if (command === "check") {
+        const build = await buildProject(sub);
+        const checked = await checkBuild(build, { force: Boolean(values.force) });
+        const issues = Object.entries(checked.summary).filter(([, v]) => v.errors || v.warnings);
+        stdout.write(`${checked.ok ? "✓" : "✗"} hyperframes check${checked.cached ? " (caché, mismo contenido)" : ""}${issues.length ? `: ${issues.map(([k, v]) => `${k} ${v.errors}E/${v.warnings}W [${v.codes.join(", ")}]`).join("; ")}` : ""}\n`);
+        return checked.ok ? 0 : 1;
+      }
+      if (command === "render") {
+        const report = await renderProject(sub, { quality: values.quality ?? "looks", workers: values.workers ?? null, force: Boolean(values.force), onStep });
+        stdout.write(values.json ? `${JSON.stringify(report, null, 2)}\n` : `${formatRenderReport(report)}\n`);
+        return report.ok ? 0 : 1;
+      }
+      if (command === "verify") {
+        const report = await verifyProject(sub, { onStep });
+        stdout.write(values.json ? `${JSON.stringify(report, null, 2)}\n` : `${formatRenderReport({ ...report, verifiedOnly: true })}\n`);
+        return report.ok ? 0 : 1;
+      }
     } catch (e) {
       stderr.write(`Error: ${e.message}\n`);
+      if (e.usage) return 2;
       if (e.validation) stderr.write(`${formatValidation(e.validation)}\n`);
       if (e.check) stderr.write(`${JSON.stringify(e.check.result ?? e.check.output, null, 2).slice(0, 4000)}\n`);
       if (e.output) stderr.write(`${String(e.output).slice(-4000)}\n`);
@@ -125,19 +167,27 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
   return 2;
 }
 
+/** Informe breve: una línea de resultado y el detalle solo de lo que falla. */
 export function formatRenderReport(r) {
-  const mark = (ok) => (ok ? "✓" : "✗");
-  const lines = [`Render de ${r.project}: ${r.ok ? "correcto" : "CON PROBLEMAS"}`, ""];
-  lines.push("Especificación (ffprobe):");
-  for (const c of r.spec) lines.push(`  ${mark(c.ok)} ${c.name.padEnd(9)} ${c.detail}`);
+  if (r.cached) {
+    return `= ${r.project}: sin cambios desde el último render correcto (hash ${r.buildHash}). ${r.files.video} · ${r.files.contactSheet}\n  Usa --force para renderizar de nuevo.`;
+  }
+  const p = r.probe;
+  const head = `${r.ok ? "✓" : "✗"} ${r.verifiedOnly ? "verificación" : "render"} ${r.project}: ${p.width}x${p.height} · ${p.fps} fps · ${p.frames} fotogramas · ${p.duration.toFixed(3)} s · ${p.codec} ${p.pixFmt}`;
   const c = r.continuity;
-  lines.push(`Continuidad: ${mark(c.ok)} ${c.pairs} transiciones · dif. media ${c.meanDiff} · máx ${c.maxDiff} · saltos ${c.spikes.length} · congelación máx ${c.longestFrozenRun} fotogramas`);
-  lines.push(`Recursos externos: ${mark(r.externalResources.ok)} ${r.externalResources.findings.length} hallazgos en ${r.externalResources.scannedFiles} archivos`);
-  lines.push(`hyperframes check: ${mark(r.hyperframesCheck.ok)}`);
-  lines.push(`Tiempo de render: ${r.performance.renderSeconds} s (${r.performance.secondsPerFrame} s/fotograma, ${r.performance.realtimeFactor}× tiempo real) · total ${r.timings.total} s`);
-  lines.push(`Vídeo: ${r.files.video} (${(r.probe.sizeBytes / 1024 ** 2).toFixed(1)} MB)`);
-  lines.push(`Hoja de contacto: ${r.files.contactSheet}`);
+  const lines = [head, `  continuidad ${c.ok ? "ok" : "FALLA"} (${c.spikes.length} saltos, congelación máx ${c.longestFrozenRun}) · recursos externos ${r.externalResources.ok ? "0" : r.externalResources.findings.length} · check ${r.hyperframesCheck?.ok ? "ok" : "FALLA"}${r.hyperframesCheck?.cached ? " (caché)" : ""}`];
+  for (const s of r.spec.filter((x) => !x.ok)) lines.push(`  ✗ ${s.name}: ${s.detail}`);
+  for (const f of r.externalResources.findings.slice(0, 5)) lines.push(`  ✗ recurso ${f.kind}: ${f.value} (${f.file})`);
+  if (c.spikes.length) lines.push(`  ✗ saltos en fotogramas: ${c.spikes.slice(0, 8).map((x) => x.frame).join(", ")}`);
+  if (r.staleBuild) lines.push("  ✗ el vídeo no corresponde a la construcción actual: ejecuta vf render");
+  if (!r.verifiedOnly) lines.push(`  render ${r.performance.renderSeconds} s · total ${r.timings.total} s · ${r.files.video} (${(p.sizeBytes / 1024 ** 2).toFixed(1)} MB) · ${r.files.contactSheet}`);
+  else lines.push(`  ${r.files?.video ?? ""} · ${r.files?.contactSheet ?? ""}`);
   return lines.join("\n");
+}
+
+export function formatPreview(s) {
+  const what = s.mode === "video" ? `${s.video} (${s.fps} fps, ${s.quality})` : `${s.frames.length} fotogramas en [${s.times.join(", ")}] s · ${s.contactSheets.join(", ")}`;
+  return `✓ vista previa ${s.project} ${s.size}${s.buildCached ? " (construcción en caché)" : ""}: ${what} · ${s.timings.total} s`;
 }
 
 const invokedDirectly = (() => {

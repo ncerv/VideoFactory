@@ -22,12 +22,16 @@ const parseRate = (r) => {
   return b ? a / b : a;
 };
 
-/** Datos del stream de vídeo, contando los fotogramas reales (-count_frames). */
-export async function probeVideo(file) {
+/**
+ * Datos del stream de vídeo según la cabecera del contenedor (sin decodificar).
+ * Los fotogramas decodificados los cuenta checkContinuity, que ya recorre el vídeo entero;
+ * con countFrames: true ffprobe los cuenta por su cuenta (una decodificación adicional).
+ */
+export async function probeVideo(file, { countFrames = false } = {}) {
   const ffprobe = resolveBinary("ffprobe");
   const { code, stdout, stderr } = await run(ffprobe, [
-    "-v", "error", "-count_frames", "-select_streams", "v:0",
-    "-show_entries", "stream=codec_name,profile,pix_fmt,width,height,r_frame_rate,avg_frame_rate,nb_read_frames,duration:format=duration,size,bit_rate,format_name",
+    "-v", "error", ...(countFrames ? ["-count_frames"] : []), "-select_streams", "v:0",
+    "-show_entries", "stream=codec_name,profile,pix_fmt,width,height,r_frame_rate,avg_frame_rate,nb_frames,nb_read_frames,duration:format=duration,size,bit_rate,format_name",
     "-of", "json", file,
   ]);
   if (code !== 0) throw new Error(`ffprobe: ${stderr.trim()}`);
@@ -41,7 +45,7 @@ export async function probeVideo(file) {
     height: s.height,
     fps: parseRate(s.r_frame_rate),
     avgFps: parseRate(s.avg_frame_rate),
-    frames: Number(s.nb_read_frames),
+    frames: Number(countFrames ? s.nb_read_frames : s.nb_frames),
     duration: Number(info.format.duration),
     sizeBytes: Number(info.format.size),
     bitRate: Number(info.format.bit_rate),
@@ -55,7 +59,10 @@ export function checkSpec(probe, expected) {
     ["width", probe.width === expected.width, `${probe.width} (esperado ${expected.width})`],
     ["height", probe.height === expected.height, `${probe.height} (esperado ${expected.height})`],
     ["fps", Math.abs(probe.fps - expected.fps) < 1e-6 && Math.abs(probe.avgFps - expected.fps) < 1e-3, `${probe.fps} (esperado ${expected.fps})`],
-    ["frames", probe.frames === expected.frames, `${probe.frames} (esperado ${expected.frames})`],
+    ["frames", probe.frames === expected.frames, `${probe.frames} en cabecera (esperado ${expected.frames})`],
+    ...(probe.decodedFrames === undefined
+      ? []
+      : [["decoded", probe.decodedFrames === expected.frames, `${probe.decodedFrames} decodificados (esperado ${expected.frames})`]]),
     ["duration", Math.abs(probe.duration - expected.duration) <= 1 / expected.fps, `${probe.duration.toFixed(3)} s (esperado ${expected.duration} s)`],
     ["codec", probe.codec === "h264", probe.codec],
     ["pixFmt", probe.pixFmt === "yuv420p", probe.pixFmt],
@@ -88,6 +95,7 @@ export async function checkContinuity(file, { spikeFactor = 6, spikeFloor = 1.5,
   }
   const round = (v) => Math.round(v * 1000) / 1000;
   return {
+    frames: diffs.length + 1, // tblend produce un valor por cada par de fotogramas consecutivos
     pairs: diffs.length,
     meanDiff: round(diffs.reduce((a, b) => a + b, 0) / (diffs.length || 1)),
     medianDiff: round(median),

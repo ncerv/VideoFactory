@@ -5,8 +5,8 @@ Escena original de un bosque nocturno: **10 s, 1080×1920 (vertical), 30 fps, 30
 ## Reproducir
 
 ```bash
-npx vf build projects/night-forest-test    # genera build/ (composición HyperFrames)
-npx vf render projects/night-forest-test   # build + check + render + verificación + hoja de contacto
+npx vf preview projects/night-forest-test  # revisión rápida: instantes de timing.json → preview.at, a 540×960
+npx vf render projects/night-forest-test   # final: check + render + verificación + hoja de contacto
 ```
 
 Salida (no versionada) en `output/`:
