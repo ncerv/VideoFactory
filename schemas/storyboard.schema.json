@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://videofactory.local/schemas/storyboard.schema.json",
+  "title": "Storyboard VideoFactory",
+  "description": "Secuencia de escenas 2D de un proyecto. Versión inicial: se ampliará con el motor de storyboard.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scenes"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "durationSeconds"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "title": { "type": "string" },
+          "durationSeconds": { "type": "number", "exclusiveMinimum": 0, "maximum": 600 },
+          "narration": { "type": "string", "description": "Texto de narración (entrada para TTS)." },
+          "visualNotes": { "type": "string", "description": "Indicaciones visuales 2D para la escena." },
+          "artStyle": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Sustituye el estilo del proyecto en esta escena." },
+          "composition": { "type": "string", "description": "Archivo HyperFrames de la escena, relativo al proyecto." },
+          "transition": { "type": "string", "description": "Id de una transición de library/transitions (pendiente)." }
+        }
+      }
+    }
+  }
+}

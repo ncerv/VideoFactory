@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://videofactory.local/schemas/service-manifest.schema.json",
+  "title": "Manifiesto de servicio de IA",
+  "description": "Describe un servicio Python independiente (services/python/<id>/service.json) y cómo lo invoca el orquestador.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "kind", "status", "python", "transport", "requiresGpu"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "kind": { "type": "string", "enum": ["tts", "music", "alignment"] },
+    "status": {
+      "type": "string",
+      "enum": ["not-installed", "installed", "disabled"],
+      "description": "not-installed: interfaz preparada, sin dependencias ni modelos."
+    },
+    "plannedModel": { "type": "string", "description": "Modelo previsto (informativo)." },
+    "python": { "type": "string", "pattern": "^3\\.\\d+$" },
+    "transport": {
+      "type": "string",
+      "enum": ["cli-json"],
+      "description": "cli-json: el orquestador ejecuta `uv run` y se comunica por archivos JSON de petición/respuesta."
+    },
+    "entrypoint": { "type": ["string", "null"], "description": "Módulo o script de entrada (null mientras no esté instalado)." },
+    "requiresGpu": { "type": "string", "enum": ["no", "recommended", "required"] },
+    "requiresNetworkHosts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Hosts necesarios para instalar dependencias o descargar modelos."
+    }
+  }
+}

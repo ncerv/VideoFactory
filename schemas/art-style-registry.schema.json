@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://videofactory.local/schemas/art-style-registry.schema.json",
+  "title": "Registro de estilos artísticos",
+  "description": "Catálogo de estilos visuales 2D disponibles para los proyectos.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "styles"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "styles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "dimension", "status", "summary"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "name": { "type": "string" },
+          "nameEs": { "type": "string" },
+          "dimension": { "const": "2d" },
+          "status": {
+            "type": "string",
+            "enum": ["registered", "in-development", "ready"],
+            "description": "registered: solo dado de alta; ready: con plantillas y guía completas."
+          },
+          "summary": { "type": "string" },
+          "evokes3dLook": {
+            "type": "boolean",
+            "description": "El estilo evoca un material o look tridimensional, pero se produce siempre con técnicas 2D."
+          },
+          "directory": { "type": "string", "description": "Carpeta con la guía y recursos del estilo (pendiente)." }
+        }
+      }
+    }
+  }
+}

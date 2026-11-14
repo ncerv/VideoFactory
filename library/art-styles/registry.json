@@ -1,0 +1,98 @@
+{
+  "$schema": "../../schemas/art-style-registry.schema.json",
+  "schemaVersion": 1,
+  "styles": [
+    {
+      "id": "woodblock-print",
+      "name": "Woodblock Print",
+      "nameEs": "Grabado en madera",
+      "dimension": "2d",
+      "status": "registered",
+      "summary": "Grabado xilográfico: tintas planas, contornos tallados y textura de veta."
+    },
+    {
+      "id": "pixel-art",
+      "name": "Pixel Art",
+      "nameEs": "Pixel art",
+      "dimension": "2d",
+      "status": "registered",
+      "summary": "Ilustración en rejilla de píxeles con paleta limitada y escalado sin suavizado."
+    },
+    {
+      "id": "noir-comic",
+      "name": "Noir Comic",
+      "nameEs": "Cómic noir",
+      "dimension": "2d",
+      "status": "registered",
+      "summary": "Viñetas de alto contraste en blanco y negro, sombras duras y tramas."
+    },
+    {
+      "id": "1930s-cartoon",
+      "name": "1930s Cartoon",
+      "nameEs": "Dibujo animado de los años 30",
+      "dimension": "2d",
+      "status": "registered",
+      "summary": "Animación clásica de manguera de goma, monocromo o color temprano, con grano de película."
+    },
+    {
+      "id": "brick-toy",
+      "name": "Brick Toy",
+      "nameEs": "Juguete de bloques",
+      "dimension": "2d",
+      "status": "registered",
+      "evokes3dLook": true,
+      "summary": "Look de piezas de construcción de juguete, resuelto con ilustración 2D (sin geometría 3D)."
+    },
+    {
+      "id": "clay-diorama",
+      "name": "Clay Diorama",
+      "nameEs": "Diorama de plastilina",
+      "dimension": "2d",
+      "status": "registered",
+      "evokes3dLook": true,
+      "summary": "Look de figuras de plastilina en diorama, resuelto con capas 2D y texturas (sin geometría 3D)."
+    },
+    {
+      "id": "knitted-puppet",
+      "name": "Knitted Puppet",
+      "nameEs": "Marioneta tejida",
+      "dimension": "2d",
+      "status": "registered",
+      "evokes3dLook": true,
+      "summary": "Look de marionetas de punto y lana, resuelto con recortes y texturas 2D (sin geometría 3D)."
+    },
+    {
+      "id": "ps2-style",
+      "name": "PS2 Style",
+      "nameEs": "Estilo PS2",
+      "dimension": "2d",
+      "status": "registered",
+      "evokes3dLook": true,
+      "summary": "Estética de videojuego de principios de los 2000 imitada con sprites y fondos 2D (sin geometría 3D)."
+    },
+    {
+      "id": "sumi-ink",
+      "name": "Sumi Ink",
+      "nameEs": "Tinta sumi",
+      "dimension": "2d",
+      "status": "registered",
+      "summary": "Pincelada de tinta sumi sobre papel, aguadas y espacio negativo."
+    },
+    {
+      "id": "painted-codex",
+      "name": "Painted Codex",
+      "nameEs": "Códice pintado",
+      "dimension": "2d",
+      "status": "registered",
+      "summary": "Pintura plana de códice, contornos definidos y composición en registros."
+    },
+    {
+      "id": "paper-cutout",
+      "name": "Paper Cutout",
+      "nameEs": "Papel recortado",
+      "dimension": "2d",
+      "status": "registered",
+      "summary": "Capas de papel recortado con bordes irregulares y sombras suaves de separación."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schemas/project.schema.json",
+  "schemaVersion": 1,
+  "id": "example-minimal",
+  "title": "Ejemplo mínimo",
+  "description": "Proyecto de ejemplo para validar la estructura y probar el render con HyperFrames. No es contenido editorial.",
+  "language": "es",
+  "artStyle": "paper-cutout",
+  "output": { "width": 1280, "height": 720, "fps": 30, "format": "mp4" },
+  "rendering": { "engine": "hyperframes", "dimension": "2d", "entry": "compositions/index.html" },
+  "storyboard": "storyboard.json"
+}

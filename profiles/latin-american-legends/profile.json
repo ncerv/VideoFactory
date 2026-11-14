@@ -1,0 +1,13 @@
+{
+  "$schema": "../../schemas/profile.schema.json",
+  "schemaVersion": 1,
+  "id": "latin-american-legends",
+  "name": "Leyendas latinoamericanas",
+  "language": "es",
+  "status": "awaiting-editorial-document",
+  "editorial": {
+    "directory": "editorial",
+    "document": null
+  },
+  "artStyles": []
+}

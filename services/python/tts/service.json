@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../schemas/service-manifest.schema.json",
+  "schemaVersion": 1,
+  "id": "qwen3-tts",
+  "kind": "tts",
+  "status": "not-installed",
+  "plannedModel": "Qwen3-TTS",
+  "python": "3.12",
+  "transport": "cli-json",
+  "entrypoint": null,
+  "requiresGpu": "recommended",
+  "requiresNetworkHosts": ["huggingface.co"]
+}

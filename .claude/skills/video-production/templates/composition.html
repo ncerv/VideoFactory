@@ -1,0 +1,56 @@
+<!doctype html>
+<!--
+  Plantilla de composición HyperFrames para VideoFactory (solo 2D).
+  - Ajusta data-width, data-height y el viewport/body a project.json → output.
+  - GSAP se carga desde vendor/gsap.min.js (copia local), nunca desde un CDN.
+  - Ids únicos con prefijo de escena; usa fromTo (no from) en las animaciones.
+-->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1280, height=720" />
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      :root {
+        --ground: #1d1a16;
+        --ink: #f4e9d8;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+        background: var(--ground);
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Inter;
+      }
+      #title-text {
+        color: var(--ink);
+        font-size: 72px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="3" data-width="1280" data-height="720">
+      <h1 id="title-text" class="clip" data-start="0" data-duration="3" data-track-index="0">VideoFactory</h1>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#title-text", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0);
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+# CLAUDE.md — Normas del proyecto VideoFactory
+
+## Arquitectura (decisiones cerradas: no cambiarlas sin aprobación explícita)
+
+1. **Node.js 22+** es el entorno principal de orquestación. El código es ESM en JavaScript (`"type": "module"`).
+2. **HyperFrames** es el motor visual y de composición 2D. **No se sustituye** por una implementación propia de Playwright + FFmpeg.
+3. **FFmpeg** se usa para procesar, mezclar y exportar.
+4. **Chromium** lo usa HyperFrames para renderizar.
+5. **Playwright** solo puede usarse en pruebas, nunca como motor de producción.
+6. **Python** se usa exclusivamente en los servicios de IA de `services/python/`, independientes del orquestador. Cada servicio tiene su propio entorno **uv** con **Python 3.12**.
+7. **Solo 2D**: no se usa geometría, modelos ni escenas 3D.
+
+## Reglas de trabajo
+
+- **No instalar** modelos ni sus dependencias (Qwen3-TTS, ACE-Step, WhisperX…) ni descargar pesos sin una petición expresa.
+- **No eludir** las restricciones de red del entorno. Si un host está bloqueado, informar de ello.
+- **No usar servicios de pago.** No ejecutar `hyperframes publish`. Mantener `HYPERFRAMES_NO_TELEMETRY=1`.
+- **No inventar contenido editorial.** El documento del perfil `latin-american-legends` se incorporará íntegro más adelante.
+- **Sin CDNs** en las composiciones: GSAP se carga desde `vendor/` (ver `vendorGsap` en `src/adapters/hyperframes.js`).
+- **Dependencias con versión exacta** (`--save-exact`), elegidas entre publicaciones con algo de recorrido. Ejecutar `npm audit` después de cada cambio.
+- **No versionar** binarios pesados, renders, modelos ni secretos (ver `.gitignore`).
+- **Sin rutas absolutas** en el código. Las rutas se resuelven desde `src/orchestrator/paths.js`.
+
+## Skill portable `.claude/skills/video-production/`
+
+- Debe poder comprimirse sola en `video-production.zip` → `video-production/{SKILL.md,references,templates,scripts}`.
+- No puede contener rutas absolutas ni enlaces fuera de su carpeta. Sus scripts solo pueden usar módulos nativos de Node 22 (`node:*`). `tests/skill.test.js` lo comprueba.
+- `scripts/detect-environment.mjs` es la única implementación de la detección del entorno. `vf doctor` la importa.
+- No confundir la Skill con el motor: el código del motor se queda en este repositorio.
+
+## Comandos
+
+```bash
+npm install
+npx vf --version
+npx vf doctor [--json] [--network]
+npx vf project validate <dir> [--json]
+npm test              # pruebas unitarias (node:test)
+npm run test:render   # render real con HyperFrames (requiere Chromium y FFmpeg)
+```
+
+## Entorno remoto actual (Claude Code en la nube)
+
+Ubuntu 24.04, 4 CPU, 15 GB de RAM y **sin GPU**. La salida a Internet pasa por un proxy: `huggingface.co` y `cdn.jsdelivr.net` están bloqueados, y npm, PyPI y GitHub están permitidos. El contenedor es efímero, así que hay que hacer commit y push del trabajo. Ejecutar `npx vf doctor --network` para ver el estado actualizado.
+
+## Rama de trabajo
+
+`claude/videofactory-env-setup-bqn986`

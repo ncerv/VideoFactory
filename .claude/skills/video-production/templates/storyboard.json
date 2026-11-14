@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "scenes": [
+    {
+      "id": "escena-1",
+      "title": "Escena 1",
+      "durationSeconds": 3,
+      "narration": "",
+      "visualNotes": ""
+    }
+  ]
+}

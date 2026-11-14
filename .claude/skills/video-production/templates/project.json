@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "mi-proyecto",
+  "title": "Título del proyecto",
+  "language": "es",
+  "artStyle": "paper-cutout",
+  "output": { "width": 1280, "height": 720, "fps": 30, "format": "mp4" },
+  "rendering": { "engine": "hyperframes", "dimension": "2d", "entry": "compositions/index.html" },
+  "storyboard": "storyboard.json"
+}

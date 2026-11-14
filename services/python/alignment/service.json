@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../schemas/service-manifest.schema.json",
+  "schemaVersion": 1,
+  "id": "whisperx",
+  "kind": "alignment",
+  "status": "not-installed",
+  "plannedModel": "WhisperX",
+  "python": "3.12",
+  "transport": "cli-json",
+  "entrypoint": null,
+  "requiresGpu": "recommended",
+  "requiresNetworkHosts": ["huggingface.co"]
+}

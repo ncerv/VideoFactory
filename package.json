@@ -1,0 +1,29 @@
+{
+  "name": "videofactory",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VideoFactory: orquestador de producción de vídeo 2D basado en HyperFrames y FFmpeg.",
+  "type": "module",
+  "bin": {
+    "vf": "src/cli/vf.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\"",
+    "test:render": "node --test \"tests/integration/*.test.js\"",
+    "vf": "node src/cli/vf.js",
+    "doctor": "node src/cli/vf.js doctor",
+    "validate:example": "node src/cli/vf.js project validate projects/example-minimal"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ajv": "8.20.0",
+    "gsap": "3.15.0",
+    "hyperframes": "0.8.229"
+  },
+  "overrides": {
+    "undici": "7.30.1"
+  }
+}

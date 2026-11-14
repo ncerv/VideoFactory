@@ -1,0 +1,47 @@
+# Dependencias
+node_modules/
+
+# Python (servicios de IA)
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Modelos y pesos: nunca en git
+models/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.gguf
+
+# Salidas y archivos intermedios de proyectos
+projects/*/output/
+projects/*/work/
+projects/*/compositions/vendor/
+renders/
+*.mp4
+*.mov
+*.webm
+*.mkv
+*.wav
+*.mp3
+*.flac
+
+# Paquetes de la Skill generados
+dist/
+*.zip
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

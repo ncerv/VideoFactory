@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schemas/storyboard.schema.json",
+  "schemaVersion": 1,
+  "scenes": [
+    {
+      "id": "title",
+      "title": "Título",
+      "durationSeconds": 3,
+      "visualNotes": "Título centrado que aparece con un fundido."
+    }
+  ]
+}

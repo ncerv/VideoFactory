@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://videofactory.local/schemas/project.schema.json",
+  "title": "Proyecto VideoFactory",
+  "description": "Manifiesto project.json de un proyecto de vídeo. La producción es exclusivamente 2D.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "title", "language", "artStyle", "output", "rendering"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$",
+      "description": "Identificador en kebab-case; debe coincidir con el nombre de la carpeta."
+    },
+    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "description": { "type": "string", "maxLength": 2000 },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+      "description": "Idioma principal (BCP 47 simplificado), p. ej. es o es-MX."
+    },
+    "profile": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Perfil editorial en profiles/<id>/ (opcional)."
+    },
+    "artStyle": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Id de un estilo de library/art-styles/registry.json."
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "fps"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 16, "maximum": 7680 },
+        "height": { "type": "integer", "minimum": 16, "maximum": 7680 },
+        "fps": { "type": "integer", "enum": [24, 25, 30, 50, 60] },
+        "format": { "type": "string", "enum": ["mp4"], "default": "mp4" }
+      }
+    },
+    "rendering": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine", "dimension"],
+      "properties": {
+        "engine": { "const": "hyperframes" },
+        "dimension": { "const": "2d", "description": "Solo producción 2D: no se admite geometría ni modelos 3D." },
+        "entry": {
+          "type": "string",
+          "default": "compositions/index.html",
+          "description": "Composición HyperFrames principal, relativa a la carpeta del proyecto."
+        }
+      }
+    },
+    "storyboard": {
+      "type": "string",
+      "description": "Ruta relativa al storyboard JSON (opcional en esta fase)."
+    },
+    "services": {
+      "type": "object",
+      "description": "Servicios de IA que usará el proyecto (se conectarán más adelante).",
+      "additionalProperties": false,
+      "properties": {
+        "tts": { "type": "string" },
+        "music": { "type": "string" },
+        "alignment": { "type": "string" }
+      }
+    }
+  }
+}

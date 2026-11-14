@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://videofactory.local/schemas/profile.schema.json",
+  "title": "Perfil editorial VideoFactory",
+  "description": "Metadatos de un perfil editorial. El contenido editorial vive en documentos dentro de la carpeta del perfil.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "name", "language", "status", "editorial"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "language": { "type": "string", "pattern": "^[a-z]{2}(-[A-Z]{2})?$" },
+    "status": {
+      "type": "string",
+      "enum": ["awaiting-editorial-document", "draft", "active"],
+      "description": "awaiting-editorial-document: el documento editorial aún no se ha incorporado."
+    },
+    "editorial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directory"],
+      "properties": {
+        "directory": { "type": "string", "description": "Carpeta del documento editorial, relativa al perfil." },
+        "document": {
+          "type": ["string", "null"],
+          "description": "Archivo del documento editorial completo; null hasta que se incorpore."
+        }
+      }
+    },
+    "artStyles": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "uniqueItems": true,
+      "description": "Estilos permitidos para el perfil. Vacío = lo decidirá el documento editorial."
+    }
+  }
+}
