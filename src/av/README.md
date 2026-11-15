@@ -57,3 +57,7 @@ Esta etapa sigue exigiendo un maestro PCM a 48 kHz y en estéreo con la misma du
 2. `vf voice ingest` (`src/voice`) conserva el original y crea la copia PCM a 48 kHz y estéreo, con soxr y las comprobaciones de duración, clipping, nivel y desfase.
 3. `vf mix render` (`src/mix`) la mezcla con música y efectos, con ducking y normalización final.
 4. `av.json` con `"audio": { "use": "multitrack" }` multiplexa esa mezcla.
+
+## Escala de tiempo del MP4
+
+El multiplexado usa `-movie_timescale` igual a la frecuencia de audio (48 000). Con la escala por defecto (1000), la lista de edición truncaba las duraciones que no son un número exacto de milisegundos: en 55,333 s se perdían 16 muestras. 48 000 también representa exactamente los fotogramas a 24, 25, 30 y 60 fps.
