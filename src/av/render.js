@@ -1,17 +1,25 @@
 // `vf av render`: integración audiovisual de un proyecto visual y uno de audio.
 //
-// Flujo: av.json → vf render del proyecto visual y vf audio render del de audio (ambos con su propia
-// caché: si sus entradas no cambiaron, no se vuelve a renderizar) → comprobación de que las fuentes
-// encajan (duración) → FFmpeg: vídeo H.264 copiado + mezcla WAV a AAC, sin filtros ni cambios de
-// ganancia → verificación → output/av-report.json.
-// Los proyectos fuente no se modifican: solo se leen sus salidas, y se comprueba con SHA-256 que
-// el multiplexado no las altera. Si las fuentes, av.json, el código de integración y FFmpeg no
-// cambian y la salida existente fue correcta, no se vuelve a multiplexar.
+// Flujo: av.json → vf render del proyecto visual y vf audio render del de audio (cada uno con su caché:
+// si sus entradas funcionales no cambiaron, no se vuelve a renderizar) → comprobación del WAV maestro
+// (PCM, frecuencia, canales, duración) → FFmpeg: vídeo H.264 copiado + mezcla a AAC, sin filtros ni
+// cambios de ganancia → verificación → output/av-report.json.
+// Los proyectos fuente no se modifican: solo se leen sus salidas, y se comprueba con SHA-256 que el
+// multiplexado no las altera. La caché de esta etapa depende del contenido de las fuentes (SHA-256 del
+// MP4 y del WAV), de av.json, del grafo de módulos de la integración y de la versión de FFmpeg.
+//
+// Forzado (independiente por etapa, nunca implícito):
+//   force       → repite solo el multiplexado y la verificación;
+//   forceVideo  → regenera el render visual (vf render --force) y después multiplexa;
+//   forceAudio  → regenera la mezcla (vf audio render --force) y después multiplexa.
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { ffmpegVersion, muxAudioVideo } from "../adapters/ffmpeg.js";
 import { renderAudioProject } from "../audio/render.js";
+import { probeWav } from "../audio/verify.js";
+import { hashFiles, moduleGraph } from "../orchestrator/fingerprint.js";
 import { paths } from "../orchestrator/paths.js";
 import { renderProject } from "../rendering/render-project.js";
 import { validateAgainst } from "../validation/schemas.js";
@@ -21,6 +29,19 @@ const seconds = (ms) => Math.round(ms) / 1000;
 const readJson = (f) => JSON.parse(fs.readFileSync(f, "utf8"));
 const sha256 = (file) => createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 export const AV_DEFAULTS = { quality: "looks", audio: { codec: "aac", bitrate: "192k", sampleRate: 48000, channels: 2 } };
+
+/** Proveedores de fuentes por defecto: los motores reales con su caché. Las pruebas los sustituyen. */
+export const DEFAULT_PROVIDERS = {
+  video: (dir, { quality, force, onStep }) => renderProject(dir, { quality, force, onStep }),
+  audio: (dir, { force, onStep }) => renderAudioProject(dir, { force, onStep }),
+};
+
+/** Traduce las opciones de la CLI a la política de forzado por etapa. */
+export function forcePolicy({ force = false, forceVideo = false, forceAudio = false, forceAll = false } = {}) {
+  const video = Boolean(forceVideo || forceAll);
+  const audio = Boolean(forceAudio || forceAll);
+  return { video, audio, mux: Boolean(force || video || audio) };
+}
 
 /** Carga y valida av.json y resuelve las carpetas de los proyectos fuente (dentro de projects/). */
 export function loadAvProject(projectDir) {
@@ -47,43 +68,62 @@ export function loadAvProject(projectDir) {
   return { dir, file, manifest, videoDir, audioDir, settings };
 }
 
-function listFiles(dir) {
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? listFiles(path.join(dir, e.name)) : [path.join(dir, e.name)])).sort();
+/** Módulos de la integración (grafo de imports desde este archivo, sin documentación). */
+export const integrationModules = () => moduleGraph([fileURLToPath(import.meta.url)]);
+
+/**
+ * Huella de todo lo que determina el MP4: contenido de las fuentes, ajustes efectivos, av.json,
+ * código de la integración y versión de FFmpeg. Los README no cuentan.
+ */
+export function avInputsHash({ manifestFile, settings, video, audio, stems = {}, ffmpeg }) {
+  const h = createHash("sha256");
+  h.update("av.json\0").update(fs.readFileSync(manifestFile)).update("\0");
+  h.update(JSON.stringify({ settings, video, audio, stems, ffmpeg }));
+  h.update("modules\0");
+  hashFiles(h, integrationModules());
+  return h.digest("hex").slice(0, 16);
 }
 
-/** Huella de todo lo que determina el MP4: fuentes, manifiesto, código de integración y FFmpeg. */
-export function avInputsHash({ manifestFile, video, audio, ffmpeg }) {
-  const h = createHash("sha256");
-  h.update("av.json\0").update(fs.readFileSync(manifestFile));
-  h.update(`video\0${video}\0audio\0${audio}\0${ffmpeg}\0`);
-  for (const f of [...listFiles(path.join(paths.root, "src", "av")), path.join(paths.root, "src", "adapters", "ffmpeg.js")]) h.update(`${path.relative(paths.root, f)}\0`).update(fs.readFileSync(f));
-  return h.digest("hex").slice(0, 16);
+/**
+ * Formato del WAV maestro frente al que exige la salida. Esta etapa no convierte: la mezcla debe
+ * llegar ya en PCM a la frecuencia y con los canales de salida (ver src/av/README.md → Voz TTS).
+ */
+export function checkMasterFormat(p, { sampleRate, channels, duration, fps }) {
+  const issues = [];
+  if (!/^pcm_s(16|24)le$/.test(p.codec)) issues.push(`códec ${p.codec} (se espera PCM de 16 o 24 bits)`);
+  if (p.sampleRate !== sampleRate) issues.push(`${p.sampleRate} Hz (se esperan ${sampleRate} Hz)`);
+  if (p.channels !== channels) issues.push(`${p.channels} canales (se esperan ${channels})`);
+  if (Math.abs(p.duration - duration) > 1 / fps) issues.push(`${p.duration.toFixed(3)} s frente a ${duration} s de vídeo`);
+  return issues;
 }
 
 /**
  * Multiplexa y verifica (sin tocar las fuentes). Separado del render de los proyectos fuente
  * para poder probarlo con entradas sintéticas.
- * @returns { ok, mux, verification, inputs }
+ * @param o.stems { id: ruta WAV } opcional: comprueba que cada stem sigue presente en el AAC
+ * @returns { ok, mux, verification, inputs, sha256 }
  */
-export async function muxAndVerify({ video, audio, output, expected, audioSettings = AV_DEFAULTS.audio, step = (_n, fn) => fn() }) {
-  const before = { video: sha256(video), audio: sha256(audio) };
+export async function muxAndVerify({ video, audio, output, expected, audioSettings = AV_DEFAULTS.audio, stems = {}, step = (_n, fn) => fn() }) {
+  const before = { video: sha256(video), audio: sha256(audio), stems: Object.fromEntries(Object.entries(stems).map(([k, f]) => [k, sha256(f)])) };
   fs.mkdirSync(path.dirname(output), { recursive: true });
   const tmp = `${output}.partial.mp4`;
-  const mux = await step("mux", () => muxAudioVideo({ video, audio, output: tmp, ...audioSettings }));
+  const mux = await step("mux", () => muxAudioVideo({ video, audio, output: tmp, bitrate: audioSettings.bitrate, sampleRate: audioSettings.sampleRate, channels: audioSettings.channels }));
   fs.renameSync(tmp, output);
-  const verification = await step("verify", () => verifyAvOutput({ file: output, sourceVideo: video, sourceAudio: audio, expected: { ...expected, sampleRate: audioSettings.sampleRate, channels: audioSettings.channels, audioCodec: audioSettings.codec } }));
-  const after = { video: sha256(video), audio: sha256(audio) };
-  const unchanged = before.video === after.video && before.audio === after.audio;
-  verification.checks.push({ name: "fuentes-intactas", ok: unchanged, detail: unchanged ? "SHA-256 del MP4 visual y del WAV iguales antes y después" : "una fuente cambió durante la integración" });
+  const verification = await step("verify", () =>
+    verifyAvOutput({ file: output, sourceVideo: video, sourceAudio: audio, stems, expected: { ...expected, sampleRate: audioSettings.sampleRate, channels: audioSettings.channels, audioCodec: audioSettings.codec } }),
+  );
+  const after = { video: sha256(video), audio: sha256(audio), stems: Object.fromEntries(Object.entries(stems).map(([k, f]) => [k, sha256(f)])) };
+  const unchanged = JSON.stringify(before) === JSON.stringify(after);
+  verification.checks.push({ name: "fuentes-intactas", ok: unchanged, detail: unchanged ? "SHA-256 del MP4 visual, del WAV maestro y de los stems iguales antes y después" : "una fuente cambió durante la integración" });
   verification.ok = verification.ok && unchanged;
   return { ok: verification.ok, mux, verification, inputs: { videoSha256: after.video, audioSha256: after.audio }, sha256: sha256(output) };
 }
 
 /**
- * @param o { force (solo el multiplexado), onStep(name) }
+ * @param o { force, forceVideo, forceAudio, forceAll, onStep(name), providers }
  * @returns informe (también en output/av-report.json); cached: true si no hizo falta multiplexar
  */
-export async function renderAvProject(projectDir, { force = false, onStep = () => {} } = {}) {
+export async function renderAvProject(projectDir, { onStep = () => {}, providers = DEFAULT_PROVIDERS, ...forceOptions } = {}) {
   const t0 = performance.now();
   const timings = {};
   const step = async (name, fn) => {
@@ -93,48 +133,53 @@ export async function renderAvProject(projectDir, { force = false, onStep = () =
     timings[name] = seconds(performance.now() - s);
     return r;
   };
+  const force = forcePolicy(forceOptions);
 
   const av = await step("load", () => loadAvProject(projectDir));
   const { dir, manifest, videoDir, audioDir, settings } = av;
   const sub = (prefix) => (name) => onStep(`${prefix}:${name}`);
 
-  // Fuentes: cada proyecto conserva su flujo y su caché. --force no se propaga a ellas.
-  const visual = await step("video", () => renderProject(videoDir, { quality: settings.quality, onStep: sub("video") }));
+  // Fuentes: cada proyecto conserva su flujo y su caché; solo se regeneran si se pide expresamente.
+  const visual = await step("video", () => providers.video(videoDir, { quality: settings.quality, force: force.video, onStep: sub("video") }));
   if (!visual.ok) throw new Error(`El render visual de ${visual.project} no es correcto`);
-  const sound = await step("audio", () => renderAudioProject(audioDir, { onStep: sub("audio") }));
+  const sound = await step("audio", () => providers.audio(audioDir, { force: force.audio, onStep: sub("audio") }));
   if (!sound.ok) throw new Error(`El render de audio de ${sound.project} no es correcto`);
 
-  const videoFile = path.join(videoDir, visual.files.video);
-  const audioFile = path.join(audioDir, "output", sound.files.mix);
+  const videoFile = path.resolve(videoDir, visual.files.video);
+  const audioOut = path.join(audioDir, "output");
+  const audioFile = path.join(audioOut, sound.files.mix);
+  const stems = Object.fromEntries(Object.entries(sound.files.stems ?? {}).map(([id, rel]) => [id, path.join(audioOut, rel)]));
   const expected = visual.expected; // { width, height, fps, duration, frames }
-  if (Math.abs(sound.duration - expected.duration) > 1 / expected.fps) throw new Error(`Las duraciones no coinciden: vídeo ${expected.duration} s, audio ${sound.duration} s`);
-  if (sound.format.sampleRate !== settings.audio.sampleRate || sound.format.channels !== settings.audio.channels) {
-    throw new Error(`La mezcla es ${sound.format.sampleRate} Hz/${sound.format.channels} canales y la salida pide ${settings.audio.sampleRate} Hz/${settings.audio.channels}: no se remuestrea en esta etapa`);
-  }
+  const master = await probeWav(audioFile);
+  const issues = checkMasterFormat(master, { ...settings.audio, duration: expected.duration, fps: expected.fps });
+  if (issues.length) throw new Error(`La mezcla ${path.relative(paths.root, audioFile)} no encaja con la salida: ${issues.join("; ")}. Esta etapa no convierte formatos`);
 
   const outDir = path.join(dir, "output");
   const output = path.join(outDir, `${manifest.id}.mp4`);
   const reportFile = path.join(outDir, "av-report.json");
   const sources = { video: sha256(videoFile), audio: sha256(audioFile) };
-  const hash = avInputsHash({ manifestFile: av.file, video: sources.video, audio: sources.audio, ffmpeg: await ffmpegVersion() });
+  const stemHashes = Object.fromEntries(Object.entries(stems).map(([id, f]) => [id, sha256(f)]));
+  const hash = avInputsHash({ manifestFile: av.file, settings, video: sources.video, audio: sources.audio, stems: stemHashes, ffmpeg: await ffmpegVersion() });
 
-  if (!force && fs.existsSync(reportFile) && fs.existsSync(output)) {
+  const rel = (f) => path.relative(paths.root, f);
+  const sourceInfo = {
+    video: { project: visual.project, file: rel(videoFile), sha256: sources.video, buildHash: visual.buildHash, cached: Boolean(visual.cached), forced: force.video },
+    audio: { project: sound.project, file: rel(audioFile), sha256: sources.audio, inputsHash: sound.inputsHash, cached: Boolean(sound.cached), forced: force.audio, format: master },
+  };
+  if (!force.mux && fs.existsSync(reportFile) && fs.existsSync(output)) {
     const prev = readJson(reportFile);
     if (prev.ok && prev.inputsHash === hash && prev.output?.sha256 === sha256(output)) {
-      return { ...prev, cached: true, timings: { ...timings, total: seconds(performance.now() - t0) } };
+      return { ...prev, sources: sourceInfo, cached: true, timings: { ...timings, total: seconds(performance.now() - t0) } };
     }
   }
 
-  const res = await muxAndVerify({ video: videoFile, audio: audioFile, output, expected, audioSettings: settings.audio, step });
-  const rel = (f) => path.relative(paths.root, f);
+  const res = await muxAndVerify({ video: videoFile, audio: audioFile, output, expected, audioSettings: settings.audio, stems, step });
   const report = {
     project: manifest.id,
     generatedAt: new Date().toISOString(),
     inputsHash: hash,
-    sources: {
-      video: { project: visual.project, file: rel(videoFile), sha256: sources.video, buildHash: visual.buildHash, cached: Boolean(visual.cached) },
-      audio: { project: sound.project, file: rel(audioFile), sha256: sources.audio, inputsHash: sound.inputsHash, cached: Boolean(sound.cached) },
-    },
+    force,
+    sources: sourceInfo,
     settings,
     expected,
     mux: res.mux,

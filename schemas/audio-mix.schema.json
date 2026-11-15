@@ -22,7 +22,7 @@
           "source": {
             "oneOf": [
               { "type": "object", "additionalProperties": false, "required": ["type", "stem"], "properties": { "type": { "const": "stem" }, "stem": { "type": "string", "description": "Ruta a un WAV de output/stems/ generado por vf audio render." } } },
-              { "type": "object", "additionalProperties": false, "required": ["type", "segments"], "properties": { "type": { "const": "tts" }, "segments": { "type": "array", "items": { "type": "object", "required": ["id", "start", "file"], "properties": { "id": { "type": "string" }, "start": { "type": "number" }, "file": { "type": "string" }, "text": { "type": "string" } } } } } }
+              { "type": "object", "additionalProperties": false, "required": ["type", "segments"], "properties": { "type": { "const": "tts" }, "segments": { "type": "array", "items": { "type": "object", "required": ["id", "start", "file"], "properties": { "id": { "type": "string" }, "start": { "type": "number" }, "file": { "type": "string", "description": "WAV original del servicio TTS (cualquier frecuencia, mono o estéreo). Se conserva intacto y se convierte una sola vez a 48 kHz estéreo antes de mezclar (estrategia en src/av/README.md)." }, "text": { "type": "string" } } } } } }
             ]
           },
           "start": { "type": "number", "minimum": 0, "default": 0 },

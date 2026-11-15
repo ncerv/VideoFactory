@@ -37,15 +37,20 @@ Uso:
                                        estéreo) y los verifica. Si nada cambió, no vuelve a renderizar
 
   Integración audiovisual (av.json: proyecto visual + proyecto de audio):
-  vf av render <dir> [--force] [--json]
-                                       Reutiliza (o genera) el MP4 visual y la mezcla WAV, copia el vídeo
-                                       H.264 y codifica el audio a AAC sin cambiar su ganancia; verifica
-                                       sincronía y duración. --force rehace solo el multiplexado
+  vf av render <dir> [--force | --force-video | --force-audio | --force-all] [--json]
+                                       Reutiliza el MP4 visual y la mezcla WAV si sus entradas no cambiaron
+                                       (si faltan, los genera), copia el vídeo H.264 y codifica el audio a
+                                       AAC sin cambiar su ganancia; verifica sincronía, duración y niveles.
+                                       Sin opciones, tampoco repite el multiplexado si nada cambió
 
 Opciones:
   --json      Salida en JSON
   --network   (doctor) Comprueba el acceso a hosts externos clave (solo abre conexiones TLS)
-  --force     (build, check, render) Rehace la etapa aunque el contenido no haya cambiado
+  --force     (build, check, render, audio render) Rehace la etapa aunque el contenido no haya cambiado.
+              En av render: repite solo el multiplexado y la verificación, no las fuentes
+  --force-video  (av render) Regenera también el render visual (vf render --force) y multiplexa
+  --force-audio  (av render) Regenera también la mezcla (vf audio render --force) y multiplexa
+  --force-all    (av render) Regenera vídeo y audio y multiplexa
   --quality   (render) draft | looks (por defecto, CRF 16) | delivery
   --workers   (render) Procesos de captura en paralelo (número o auto)
   --at        (preview) Instantes en segundos separados por comas
@@ -73,6 +78,9 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
         quality: { type: "string" },
         workers: { type: "string" },
         force: { type: "boolean" },
+        "force-video": { type: "boolean" },
+        "force-audio": { type: "boolean" },
+        "force-all": { type: "boolean" },
         at: { type: "string" },
         frames: { type: "string" },
         video: { type: "boolean" },
@@ -91,6 +99,12 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
     stdout.write(`vf ${getVersion()}\n`);
     return 0;
   }
+  const avForce = ["force-video", "force-audio", "force-all"].filter((k) => values[k]);
+  if (avForce.length && !(command === "av" && sub === "render")) {
+    stderr.write(`--${avForce[0]} solo es válido con vf av render\n`);
+    return 2;
+  }
+
   if (values.help || !command) {
     stdout.write(HELP);
     return 0;
@@ -131,11 +145,11 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
   if (command === "av") {
     const dir = rest[0];
     if (sub !== "render" || !dir) {
-      stderr.write("Uso: vf av render <carpeta-del-proyecto> [--force] [--json]\n");
+      stderr.write("Uso: vf av render <carpeta-del-proyecto> [--force | --force-video | --force-audio | --force-all] [--json]\n");
       return 2;
     }
     try {
-      const report = await renderAvProject(dir, { force: Boolean(values.force), onStep: (name) => values.json || stderr.write(`· ${name}\n`) });
+      const report = await renderAvProject(dir, { force: Boolean(values.force), forceVideo: Boolean(values["force-video"]), forceAudio: Boolean(values["force-audio"]), forceAll: Boolean(values["force-all"]), onStep: (name) => values.json || stderr.write(`· ${name}\n`) });
       stdout.write(values.json ? `${JSON.stringify(report, null, 2)}\n` : `${formatAvReport(report)}\n`);
       return report.ok ? 0 : 1;
     } catch (e) {
@@ -245,13 +259,14 @@ export function formatAudioReport(r) {
 
 /** Informe breve de la integración audiovisual: resultado, vídeo, audio, sincronía y solo los fallos. */
 export function formatAvReport(r) {
-  const src = `${r.sources.video.project}${r.sources.video.cached ? " (caché)" : ""} + ${r.sources.audio.project}${r.sources.audio.cached ? " (caché)" : ""}`;
-  if (r.cached) return `= ${r.project}: sin cambios (hash ${r.inputsHash}). ${r.output.file} · fuentes ${src} · usa --force para multiplexar de nuevo`;
+  const state = (s) => (s.forced ? " (regenerado)" : s.cached ? " (caché)" : " (generado)");
+  const src = `${r.sources.video.project}${state(r.sources.video)} + ${r.sources.audio.project}${state(r.sources.audio)}`;
+  if (r.cached) return `= ${r.project}: sin cambios (hash ${r.inputsHash}). ${r.output.file} · fuentes ${src} · --force repite el multiplexado; --force-video/--force-audio/--force-all regeneran fuentes`;
   const v = r.video;
   const a = r.audio;
   const lines = [
     `${r.ok ? "✓" : "✗"} av ${r.project}: ${v.width}x${v.height} · ${v.fps} fps · ${v.frames} fotogramas · ${v.codec} (copiado) + ${a.codec} ${a.profile} ${a.sampleRate} Hz ${a.channels} canales ${Math.round(a.bitRate / 1000)} kb/s · ${r.output.duration.toFixed(3)} s`,
-    `  inicio vídeo ${v.startTime} s / audio ${a.startTime} s · desfase ${a.lagSamples} muestras · ${a.integratedLufs} LUFS · true peak ${a.truePeakDb} dBTP (fuente ${a.source.integratedLufs} LUFS / ${a.source.truePeakDb} dBTP) · Δnivel ${a.levelDiffDb} dB`,
+    `  inicio vídeo ${v.startTime} s / audio ${a.startTime} s · desfase ${a.lagSamples} muestras (inicio ${a.lagStartSamples} / final ${a.lagEndSamples}) · ${a.integratedLufs} LUFS · true peak ${a.truePeakDb} dBTP (fuente ${a.source.integratedLufs} LUFS / ${a.source.truePeakDb} dBTP) · Δnivel ${a.levelDiffDb} dB`,
   ];
   for (const c of r.checks.filter((x) => !x.ok)) lines.push(`  ✗ ${c.name}: ${c.detail}`);
   lines.push(`  fuentes ${src} · ${r.timings.total} s · output/${path.basename(r.output.file)} (${(r.output.sizeBytes / 1024 ** 2).toFixed(1)} MB)`);

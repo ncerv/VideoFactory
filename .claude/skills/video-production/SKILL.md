@@ -62,7 +62,12 @@ Ante la duda, es una tarea A. Pasa a B solo cuando una necesidad concreta no ten
 
 1. Crea `projects/<id>/av.json` (esquema `schemas/av-project.schema.json`). Debe referenciar un proyecto visual y uno de audio hermanos (`"../<visual>"`, `"../<audio>"`). Como modelo, usa `projects/av-integration-test/`.
 2. `npx vf av render projects/<id>` reutiliza en caché el MP4 de `vf render` y la mezcla de `vf audio render`: si faltan, los genera una vez. Después copia el vídeo y codifica el audio a AAC sin tocar su ganancia.
-3. Revisa `output/av-report.json → checks`: sincronía (desfase en muestras), duraciones, vídeo copiado y nivel conservado. Los proyectos fuente no se modifican.
+3. Revisa `output/av-report.json → checks`: sincronía al principio y al final, duraciones, muestras y relleno AAC, vídeo copiado, nivel, bandas y presencia de cada stem. Los proyectos fuente no se modifican.
+4. Eficiencia sin perder calidad:
+   - **Fuentes:** si sus entradas funcionales no cambian, se reutilizan. Editar documentación no invalida ninguna caché, así que no fuerces por eso.
+   - **`--force`:** repite solo el multiplexado. Regenera una fuente (`--force-video`, `--force-audio`, `--force-all`) solo si sospechas de su caché, porque el render visual cuesta minutos.
+   - **WAV maestro:** es la referencia sin pérdida. El AAC es solo para la entrega; no edites ni sustituyas el WAV.
+   - **Comprobaciones:** no se omiten nunca. Una entrega con `checks` en rojo no es válida.
 
 ## B. Desarrollar el motor
 

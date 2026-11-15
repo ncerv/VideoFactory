@@ -5,4 +5,4 @@
 - `vf --version`
 - `vf doctor [--json] [--network]`
 - `vf project validate [dir] [--json]`
-- `vf av render <dir> [--force] [--json]`: integración audiovisual (`av.json`); `--force` rehace solo el multiplexado
+- `vf av render <dir> [--force | --force-video | --force-audio | --force-all] [--json]`: integración audiovisual (`av.json`). `--force` rehace solo el multiplexado; las otras opciones regeneran también las fuentes indicadas. Son exclusivas de `av render`

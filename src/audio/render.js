@@ -10,9 +10,9 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import * as library from "../../library/audio/index.js";
-import { paths } from "../orchestrator/paths.js";
+import { hashFiles, moduleGraph } from "../orchestrator/fingerprint.js";
 import { createRng } from "../rendering/prng.js";
 import { validateAgainst } from "../validation/schemas.js";
 import { analyze, applyFades, duckingEnvelope, multiply, noiseStereo, scale, sum } from "./dsp.js";
@@ -39,10 +39,6 @@ export function packageVersion(pkg) {
   throw new Error(`No se encuentra la versión de ${pkg}`);
 }
 
-function listFiles(dir) {
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? listFiles(path.join(dir, e.name)) : [path.join(dir, e.name)])).sort();
-}
-
 /** Carga y valida audio.json, timing.json y el módulo de composición. */
 export async function loadAudioProject(projectDir) {
   const dir = path.resolve(projectDir);
@@ -61,19 +57,28 @@ export async function loadAudioProject(projectDir) {
   return { dir, manifest, timing, timingFile, sourceFile, compose: mod.default };
 }
 
-/** Hash de todo lo que determina el resultado: si no cambia, el audio tampoco. */
+/**
+ * Hash de todo lo que determina el resultado: si no cambia, el audio tampoco.
+ * Solo entradas funcionales: audio.json, timing.json, el grafo de módulos de la composición (relativo
+ * al proyecto), el grafo de módulos del motor desde este archivo (generadores, DSP, WAV, PRNG,
+ * verificación) y las versiones de tone y node-web-audio-api. La documentación no cuenta.
+ */
 export function inputsHash({ dir, manifest, timingFile, sourceFile }) {
   const h = createHash("sha256");
-  const add = (label, file) => h.update(`${label}\0`).update(fs.readFileSync(file));
+  const add = (label, file) => h.update(`${label}\0`).update(fs.readFileSync(file)).update("\0");
   add("audio.json", path.join(dir, "audio.json"));
   if (fs.existsSync(timingFile)) add("timing", timingFile);
-  add("source", sourceFile);
-  for (const f of listFiles(path.join(paths.library, "audio"))) add(path.relative(paths.root, f), f);
-  for (const f of listFiles(path.join(paths.root, "src", "audio"))) add(path.relative(paths.root, f), f);
+  h.update("project-modules\0");
+  hashFiles(h, moduleGraph([sourceFile]), dir);
+  h.update("engine-modules\0");
+  hashFiles(h, engineModules());
   for (const pkg of ["tone", "node-web-audio-api"]) h.update(`${pkg}@${packageVersion(pkg)}\0`);
   h.update(JSON.stringify(manifest.format));
   return h.digest("hex").slice(0, 16);
 }
+
+/** Módulos del motor de audio que intervienen en un render (grafo de imports desde este archivo). */
+export const engineModules = () => moduleGraph([fileURLToPath(import.meta.url)]);
 
 /** Renderiza un stem con Tone.Offline y devuelve sus canales Float32. */
 async function renderStem(Tone, stem, { duration, sampleRate, channels, timing, seed }) {

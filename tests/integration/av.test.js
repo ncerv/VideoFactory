@@ -24,5 +24,9 @@ test("vf av render une vídeo y mezcla aprobada: 1080×1920, 30 fps, 300 fotogra
   assert.deepEqual([a.codec, a.sampleRate, a.channels, a.startTime, v.startTime, a.lagSamples, a.declaredSamples], ["aac", 48000, 2, 0, 0, 0, 480000]);
   assert.ok(Math.abs(report.output.duration - 10) < 1 / 30);
   assert.ok(Math.abs(a.levelDiffDb) < 0.1);
+  assert.deepEqual([a.lagStartSamples, a.lagEndSamples, a.paddingSamples], [0, 0, 256], "sin deriva; relleno AAC de 10 s");
+  assert.ok(Math.abs(a.stems.pulse.diffDb) <= 0.5, `latido presente en el AAC (${a.stems.pulse.diffDb} dB)`);
+  assert.equal(report.sources.video.forced, false, "--force no regenera las fuentes");
+  assert.equal(report.sources.audio.forced, false);
   for (const s of Object.values(report.sources)) assert.equal(sha(path.join(paths.root, s.file)), s.sha256, `${s.file} intacto`);
 });

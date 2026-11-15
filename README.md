@@ -79,7 +79,8 @@ Un proyecto `av.json` declara un proyecto visual y uno de audio, que siguen sien
 npx vf av render projects/av-integration-test   # MP4 final: H.264 copiado + mezcla en AAC 48 kHz estéreo + av-report.json
 ```
 
-- Reutiliza las salidas de `vf render` y `vf audio render` mediante sus cachés, y solo las genera si faltan o cambiaron.
+- Reutiliza las salidas de `vf render` y `vf audio render` mediante sus cachés, y solo las genera si faltan o cambiaron sus entradas funcionales (los README no cuentan).
+- `--force` repite solo el multiplexado. `--force-video`, `--force-audio` y `--force-all` regeneran además las fuentes indicadas (tabla en `src/av/README.md`).
 - FFmpeg copia el vídeo sin recodificarlo y codifica la mezcla a AAC sin filtros ni cambios de ganancia: todavía no hay `loudnorm`.
 - Verifica la especificación del vídeo, que los paquetes H.264 son idénticos a los del render visual, el formato del audio, que ambos streams empiezan en 0 y duran lo mismo, el desfase medido por correlación con la mezcla fuente (0 muestras), el nivel conservado, la decodificación completa y que las fuentes no cambian.
 

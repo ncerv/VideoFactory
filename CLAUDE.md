@@ -47,7 +47,7 @@ npx vf check <proyecto> [--force]       # hyperframes check (en caché por hash 
 npx vf render <proyecto> [--quality draft|looks|delivery] [--workers n] [--force]   # render final + verificación
 npx vf verify <proyecto>                # vuelve a verificar el MP4 final sin renderizar
 npx vf audio render <proyecto> [--force]   # audio procedural (Tone.js offline) → mix.wav + stems, verificados
-npx vf av render <proyecto> [--force]      # av.json: MP4 visual + mezcla WAV → MP4 con AAC (vídeo copiado, sin cambios de ganancia)
+npx vf av render <proyecto> [--force | --force-video | --force-audio | --force-all]   # av.json: MP4 visual + mezcla WAV → MP4 con AAC (vídeo copiado, sin cambios de ganancia). --force solo multiplexa
 npm test              # pruebas unitarias (node:test)
 npm run test:render   # render real con HyperFrames (requiere Chromium y FFmpeg)
 ```
