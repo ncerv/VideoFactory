@@ -1,0 +1,62 @@
+{
+  "$schema": "../../schemas/storyboard.schema.json",
+  "schemaVersion": 1,
+  "scenes": [
+    {
+      "id": "escena-1",
+      "narration": "Raimundo siguió las huellas hacia el río… y el río nunca llegó.",
+      "visualNotes": "Huellas de tinta en el lodo que avanzan hacia el borde del encuadre; al fondo, el agua oscura se aleja. Sonido: Selva nocturna, leve; en el \"…\", silencio y una gota.",
+      "title": "Duración provisional (proporcional a las palabras sobre 45 s); se ajustará a la duración real de la narración",
+      "durationSeconds": 4.0
+    },
+    {
+      "id": "escena-2",
+      "narration": "A orillas del Amazonas, ya tenía tres pacas en la canoa. Aun así, entró por otra.",
+      "visualNotes": "Orilla al atardecer; canoa con tres pacas colgadas en silueta de aguada; Raimundo entra entre lianas. Sonido: Agua contra la canoa, insectos.",
+      "title": "Duración provisional (proporcional a las palabras sobre 45 s); se ajustará a la duración real de la narración",
+      "durationSeconds": 5.4
+    },
+    {
+      "id": "escena-3",
+      "narration": "Un silbido agudo cruzó la selva. La paca escapó. En el lodo, huellas pequeñas, descalzas. Parecían ir hacia el río.",
+      "visualNotes": "Un trazo de pincel ondulante cruza los árboles (el silbido dibujado); la paca huye; primer plano de huellas pequeñas y descalzas. Sonido: Silbido agudo, hojas que se agitan.",
+      "title": "Duración provisional (proporcional a las palabras sobre 45 s); se ajustará a la duración real de la narración",
+      "durationSeconds": 6.7
+    },
+    {
+      "id": "escena-4",
+      "narration": "Perdido, las siguió. Olía a hojas podridas. El silbido, más cerca. Pero el agua no se oía.",
+      "visualNotes": "Raimundo entre raíces y niebla de tinta; manchas de hojas podridas; el trazo del silbido, más grueso y cercano. Sonido: Silbido más cerca, respiración; ningún sonido de agua.",
+      "title": "Duración provisional (proporcional a las palabras sobre 45 s); se ajustará a la duración real de la narración",
+      "durationSeconds": 5.7
+    },
+    {
+      "id": "escena-5",
+      "narration": "Se agachó. El talón de la huella… estaba adelante. ¿Quién camina así?",
+      "visualNotes": "Primer plano: la mano junto a una huella; el talón marcado adelante y los dedos hacia atrás. Sonido: En el \"…\", silencio y un crujido.",
+      "title": "Duración provisional (proporcional a las palabras sobre 45 s); se ajustará a la duración real de la narración",
+      "durationSeconds": 4.0
+    },
+    {
+      "id": "escena-6",
+      "narration": "Los ribereños le dicen Curupira. Pelo rojo, pies al revés. Cuida el monte y pierde al que caza de más.",
+      "visualNotes": "Silueta pequeña entre los árboles, con el pelo rojo como único color y los pies al revés visibles. Sonido: Silbido lejano, selva.",
+      "title": "Duración provisional (proporcional a las palabras sobre 45 s); se ajustará a la duración real de la narración",
+      "durationSeconds": 6.7
+    },
+    {
+      "id": "escena-7",
+      "narration": "Al amanecer lo encontraron junto a su canoa. Las tres pacas no estaban.",
+      "visualNotes": "Amanecer gris sobre el río; Raimundo encogido junto a la canoa; los ganchos vacíos donde colgaban las pacas. Sonido: Agua tranquila, pájaros del amanecer.",
+      "title": "Duración provisional (proporcional a las palabras sobre 45 s); se ajustará a la duración real de la narración",
+      "durationSeconds": 4.4
+    },
+    {
+      "id": "escena-8",
+      "narration": "Las huellas no iban hacia el río… venían del monte. Mientras el Curupira cuide el monte, nadie que cace de más llega al río.",
+      "visualNotes": "Las huellas vistas desde arriba: salen del monte; termina con el agua alejándose, como en la escena 1. Sonido: En el \"…\", un último silbido corto; después, silencio.",
+      "title": "Duración provisional (proporcional a las palabras sobre 45 s); se ajustará a la duración real de la narración",
+      "durationSeconds": 8.1
+    }
+  ]
+}

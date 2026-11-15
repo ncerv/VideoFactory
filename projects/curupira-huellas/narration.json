@@ -1,0 +1,9 @@
+{
+  "$schema": "../../schemas/narration.schema.json",
+  "schemaVersion": 1,
+  "id": "curupira-huellas",
+  "script": { "file": "script/script.md", "version": "v1", "status": "draft" },
+  "voiceProfile": { "id": "mystery-documentary" },
+  "source": { "file": "voice/narration.wav", "generator": "Google AI Studio (manual)" },
+  "alignment": "none"
+}

@@ -11,7 +11,7 @@ El bloque siguiente es el registro. Mantén su formato.
 
 ```text
 USADOS (tema · país · categoría · gancho · cierre · narrador · forma de la frase de significado):
--
+- El Curupira · Brasil (Amazonía) · criaturas y seres · en plena acción · bucle · cronista · "Mientras…, nadie…"
 
 PROPUESTOS:
 - La Quema del Diablo · Guatemala · creencias y supersticiones populares
