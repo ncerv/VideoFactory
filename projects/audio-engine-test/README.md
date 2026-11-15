@@ -29,4 +29,20 @@ Salida (no versionada) en `output/`:
 | 6,4–8,7 s | Crescendo de ruido marrón que barre de 180 a 1600 Hz, como transición discreta |
 | 8,2–10 s | Fade-out |
 
-**Espacio para la voz:** la música vive por debajo de 300 Hz o es escasa y aguda. La banda 300–3000 Hz queda en torno a −13 dB respecto de la energía total, y el conjunto suena a unos −26 LUFS, un nivel de fondo adecuado para narración.
+**Espacio para la voz:** la música vive por debajo de 300 Hz o es escasa y aguda. La banda 300–3000 Hz queda en torno a −14 dB respecto de la energía total, y el conjunto suena a unos −26 LUFS, un nivel de fondo adecuado para narración.
+
+## Mezcla aprobada (referencia)
+
+**Nivel del latido aprobado: `timing.pulse.gainDb = −11 dB`.**
+
+En la primera escucha, con −17 dB, el latido casi no se percibía. Se compararon dos variantes: +3 dB (−14) y +6 dB (−11). El usuario aprobó la de **+6 dB** tras escucharlas. El patrón, el tempo, el crescendo y la duración del latido no cambian.
+
+| Medida (mezcla de referencia) | Valor |
+|---|---|
+| Formato | PCM s16le · 48 kHz · 16 bits · estéreo · 10,000 s (480 000 muestras) |
+| Pico de muestra / true peak | −9,93 dBFS / −9,9 dBTP (sin clipping) |
+| Sonoridad | −25,7 LUFS integrados · LRA 4,0 LU |
+| Latido respecto a la mezcla (RMS, 3,4–9,3 s) | −9,8 dB (con el nivel anterior de −17 dB era −15,4 dB) |
+| Ganancia del master (techo −1,5 dBFS) | 0 dB: el techo no actúa y el resto de stems no cambia |
+
+El render es determinista: con las mismas entradas, `mix.wav` y los stems salen idénticos byte a byte.
