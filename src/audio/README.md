@@ -22,3 +22,8 @@ Motor de audio procedural. Genera música y efectos **solo con síntesis**: Tone
 - **Voz:** no se sintetiza. `audio.json → voice.segments` solo atenúa (ducking) los stems de rol `music` y `ambience` de este proyecto. La narración real se recibe con `vf voice ingest` (`src/voice`) y se mezcla con `vf mix render` (`src/mix`).
 - **Integración con la imagen:** `vf av render` (`src/av`) multiplexa la mezcla con el MP4 visual sin modificarla.
 - **Mezcla multipista:** `vf mix render` ejecuta `schemas/audio-mix.schema.json` (narración, stems, ducking y normalización final).
+
+## Ajustes comprobados en producción (El Curupira, 55,333 s)
+
+- **Duración exacta:** `Tone.Offline` trunca duración × frecuencia (55,333333 s daban 2 655 999 muestras). Cada stem se ajusta al número exacto `round(duración × frecuencia)`.
+- **Auditoría de recursos:** no revisa `output/`, `build/`, `build-preview/` ni `voice/`. La narración que entrega el usuario es una entrada legítima del flujo, no una muestra de terceros.

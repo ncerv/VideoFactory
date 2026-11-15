@@ -57,6 +57,11 @@ export async function muxAudioVideo({ video, audio, output, bitrate = "192k", sa
     "-c:a", "aac", "-b:a", bitrate, "-ar", String(sampleRate), "-ac", String(channels),
     "-map_metadata", "-1", "-map_chapters", "-1",
     "-fflags", "+bitexact", "-flags:a", "+bitexact",
+    // Escala de tiempo de la película = frecuencia de audio: la lista de edición guarda la duración
+    // exacta en muestras (con la escala por defecto, 1000, una duración que no es un número exacto
+    // de milisegundos se trunca; 55,333 s perdía 16 muestras). También representa exactamente los
+    // fotogramas a 24, 25, 30 o 60 fps.
+    "-movie_timescale", String(sampleRate),
     "-movflags", "+faststart",
     "-f", "mp4", output,
   ];

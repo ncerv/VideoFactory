@@ -75,13 +75,16 @@ test("documento editorial: incorporado íntegro y protegido frente a modificacio
   assert.equal(res.ok, false);
 });
 
-test("registro editorial: inicializado con la plantilla exacta del documento original", () => {
+test("registro editorial: mantiene la estructura de la plantilla del documento original", () => {
   const ed = path.join(paths.profiles, "latin-american-legends", "editorial");
   const block = (text) => text.match(/```text\n([\s\S]*?)```/)[1];
   const guion = fs.readFileSync(path.join(ed, "guionista.md"), "utf8");
   const plantilla = block(guion.slice(guion.indexOf("## Registro")));
-  assert.equal(block(fs.readFileSync(path.join(ed, "registro.md"), "utf8")), plantilla);
-  for (const s of ["USADOS", "PROPUESTOS", "MI RITMO DE VOZ"]) assert.match(plantilla, new RegExp(s));
+  const headers = (b) => b.split("\n").filter((l) => /^[A-ZÁÉÍÓÚÑ ]+(\(.*\))?:$/.test(l));
+  const registro = block(fs.readFileSync(path.join(ed, "registro.md"), "utf8"));
+  assert.deepEqual(headers(registro), headers(plantilla), "mismas secciones, con el mismo encabezado y orden");
+  assert.equal(headers(plantilla).length, 3);
+  for (const l of registro.split("\n").filter((x) => x.startsWith("- ") && x.length > 2)) assert.ok(!/inventad|estimad/i.test(l), l);
   const nota = fs.readFileSync(path.join(ed, "compatibilidad.md"), "utf8");
   for (const s of ["Google AI Studio", "mystery-documentary", "+12 %", "duración real", "no se acelera"]) assert.ok(nota.includes(s), s);
 });

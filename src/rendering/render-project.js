@@ -63,7 +63,14 @@ export async function verifyVideo({ projectDir, project, build, video, contactSh
   const duration = build.scene.duration;
   const expected = { width, height, fps, duration, frames: Math.round(duration * fps) };
   const probe = await step("probe", () => probeVideo(video));
-  const continuity = await step("continuity", () => checkContinuity(video));
+  // Transiciones intencionadas declaradas en timing.json (p. ej. fundidos entre planos).
+  let transitions = [];
+  try {
+    transitions = JSON.parse(fs.readFileSync(path.join(path.resolve(projectDir), project.rendering.timing ?? "timing.json"), "utf8")).transitions ?? [];
+  } catch {
+    transitions = [];
+  }
+  const continuity = await step("continuity", () => checkContinuity(video, { transitions, fps }));
   const spec = checkSpec({ ...probe, decodedFrames: continuity.frames }, expected);
   const audit = auditExternalResources(build.buildDir);
   const sheet = await step("contactSheet", () =>

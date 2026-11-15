@@ -74,7 +74,11 @@ export function checkSpec(probe, expected) {
  * Continuidad: diferencia media de luminancia entre fotogramas consecutivos.
  * Detecta saltos (picos muy por encima de la mediana) y congelaciones (tramos sin cambio).
  */
-export async function checkContinuity(file, { spikeFactor = 6, spikeFloor = 1.5, frozenRun = 15 } = {}) {
+/**
+ * @param o.transitions [{at, duration}] transiciones intencionadas (s): los saltos dentro de esas
+ *   ventanas (±margin) se registran como previstos y no hacen fallar la continuidad. fps es necesario.
+ */
+export async function checkContinuity(file, { spikeFactor = 6, spikeFloor = 1.5, frozenRun = 15, transitions = [], fps = 30, margin = 0.15 } = {}) {
   const ffmpeg = resolveBinary("ffmpeg");
   const { code, stdout, stderr } = await run(ffmpeg, [
     "-v", "error", "-i", file,
@@ -86,7 +90,10 @@ export async function checkContinuity(file, { spikeFactor = 6, spikeFloor = 1.5,
   const sorted = [...diffs].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
   const threshold = Math.max(spikeFloor, median * spikeFactor);
-  const spikes = diffs.map((d, i) => ({ frame: i + 1, diff: d })).filter((x) => x.diff > threshold);
+  const allSpikes = diffs.map((d, i) => ({ frame: i + 1, diff: d })).filter((x) => x.diff > threshold);
+  const planned = (frame) => transitions.some((t) => frame / fps >= t.at - margin && frame / fps <= t.at + t.duration + margin);
+  const spikes = allSpikes.filter((x) => !planned(x.frame));
+  const expected = allSpikes.length - spikes.length;
   let run0 = 0;
   let longestFrozen = 0;
   for (const d of diffs) {
@@ -102,6 +109,8 @@ export async function checkContinuity(file, { spikeFactor = 6, spikeFloor = 1.5,
     maxDiff: round(sorted[sorted.length - 1] ?? 0),
     spikeThreshold: round(threshold),
     spikes,
+    plannedTransitions: transitions.length,
+    spikesInTransitions: expected,
     longestFrozenRun: longestFrozen,
     ok: spikes.length === 0 && longestFrozen < frozenRun,
   };

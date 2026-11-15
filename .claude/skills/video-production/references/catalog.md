@@ -25,6 +25,8 @@ export default function scene({ width, height, fps, duration, timing, rng, proje
 
 - Cada capa mide `width × height` (1080×1920). El SVG de una capa usa `<svg viewBox="0 0 1080 1920">…</svg>`.
 - **`timing.json`**: `duration`, `fps` (igual a `project.output.fps`), `seed`, todos los tiempos de la escena y `preview.at` (instantes clave de revisión).
+  - Con varios planos encadenados, declara también `transitions: [{at, duration}]` (fundidos o cortes intencionados). La verificación de continuidad de `vf render` acepta los saltos dentro de esas ventanas y sigue fallando por cualquier salto fuera de ellas.
+  - Ejemplo de varios planos sobre una narración real: `projects/curupira-huellas/`.
 - **`project.json`**: `rendering.source: "scene.js"`, `rendering.timing: "timing.json"`, `rendering.dimension: "2d"`.
 
 ## Componentes (`library/components/index.js`)
@@ -132,4 +134,5 @@ export default function composition({ duration, sampleRate, timing: T, lib }) {
 | `vf audio render` (10 s, 5 stems) | ~4 s, o ~0,2 s si nada cambió |
 | `vf voice ingest` (6 s de voz, con conversión) | ~1 s, o ~0,1 s si nada cambió |
 | `vf mix render` (3 pistas, 8 s) | ~1 s, o ~0,1 s si nada cambió |
+| `vf render` (55 s, ocho planos) | ~250 s de render + ~50 s de verificación |
 | `vf av render` (fuentes en caché, 10 s) | ~6 s (multiplexado ~0,5 s + verificación ~5 s), o ~0,5 s si nada cambió |
