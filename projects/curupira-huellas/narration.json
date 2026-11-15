@@ -2,8 +2,20 @@
   "$schema": "../../schemas/narration.schema.json",
   "schemaVersion": 1,
   "id": "curupira-huellas",
-  "script": { "file": "script/script.md", "version": "v1", "status": "draft" },
-  "voiceProfile": { "id": "mystery-documentary" },
-  "source": { "file": "voice/narration.wav", "generator": "Google AI Studio (manual)" },
+  "script": {
+    "file": "script/script.md",
+    "version": "v1",
+    "status": "approved",
+    "sha256": "0194e8ab6701c588de09fb31b30146c43490c11b64eb87e5c586d0e04b42893a",
+    "approvedAt": "2026-11-15T03:11:19.048Z"
+  },
+  "voiceProfile": {
+    "id": "mystery-documentary",
+    "sha256": "1a0db9e68790b0b0c93e72ef91e83fe17baf4286818f8e9292aeb139bfabed20"
+  },
+  "source": {
+    "file": "voice/narration.wav",
+    "generator": "Google AI Studio (manual)"
+  },
   "alignment": "none"
 }

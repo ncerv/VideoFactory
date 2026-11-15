@@ -2,7 +2,7 @@
 
 Leyenda del Curupira (Brasil, Amazonía), escrita con el modo guion de `profiles/latin-american-legends/editorial/guionista.md`.
 
-**Estado:** etapa A completada. Guion v1 en **borrador**, pendiente de la aprobación del usuario (etapa B).
+**Estado:** etapa B completada. Guion v1 **aprobado** por el usuario (SHA-256 `0194e8ab…893a`). Pendiente: narración manual (etapa C).
 
 | Archivo | Contenido |
 |---|---|
