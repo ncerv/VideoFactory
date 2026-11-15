@@ -26,6 +26,11 @@
         "document": {
           "type": ["string", "null"],
           "description": "Archivo del documento editorial completo; null hasta que se incorpore."
+        },
+        "sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 del documento tal como lo entregó el usuario. El documento no se modifica: si el hash no coincide, la validación falla."
         }
       }
     },

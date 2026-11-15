@@ -128,7 +128,7 @@ src/
 services/python/                   Servicios de IA (sin instalar): alignment. Sin servicio de voz (narración externa) ni de música (Tone.js)
 profiles/voices/                   Perfiles vocales para generar la narración a mano
 library/                           art-styles, compositions, motion, materials, transitions, components
-profiles/latin-american-legends/   Perfil editorial (pendiente de su documento)
+profiles/latin-american-legends/   Perfil editorial; documento original en editorial/guionista.md
 projects/                          Proyectos de vídeo (example-minimal incluido)
 tests/                             Pruebas (node:test)
 ```

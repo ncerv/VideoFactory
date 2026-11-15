@@ -3,7 +3,7 @@
 | # | Etapa | Responsable | Estado |
 |---|---|---|---|
 | 1 | Validación del proyecto | `vf project validate` | ✅ Disponible |
-| 0 | Desarrollo editorial y aprobación del guion (etapas A y B) | Claude con el documento editorial del perfil · `vf script approve` | ✅ Aprobación disponible (el documento editorial está pendiente de incorporar) |
+| 0 | Desarrollo editorial y aprobación del guion (etapas A y B) | Claude con el documento editorial del perfil · `vf script approve` | ✅ Disponible (documento editorial del perfil incorporado) |
 | 2 | Storyboard: escenas, duraciones, narración | `src/storyboard` | Pendiente |
 | 3 | Assets 2D: ilustraciones, texturas, tipografías | `src/assets` | Pendiente |
 | 4a | Narración: generada a mano fuera de VideoFactory (etapa C) y recibida (etapa D) | Usuario · `vf voice ingest` | ✅ Disponible |

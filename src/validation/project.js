@@ -1,6 +1,7 @@
 // Validación de proyectos VideoFactory (`vf project validate`).
 // Comprueba el esquema de project.json y la coherencia con el resto del repositorio:
 // perfil, estilo artístico, storyboard, composición de entrada y restricción 2D.
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { paths } from "../orchestrator/paths.js";
@@ -89,6 +90,14 @@ export function validateProject(projectDir, { repoPaths = paths } = {}) {
       if (profile) {
         for (const e of validateAgainst("profile", profile)) {
           issues.push({ level: "error", code: "schema", message: `profile.json${e.instancePath || ""}: ${e.message}` });
+        }
+        const doc = profile.editorial?.document;
+        if (doc) {
+          const docPath = insideDir(path.join(repoPaths.profiles, project.profile), doc);
+          if (!docPath || !fs.existsSync(docPath)) issues.push({ level: "error", code: "missing-editorial-document", message: `No existe el documento editorial ${doc} del perfil "${project.profile}"` });
+          else if (profile.editorial.sha256 && createHash("sha256").update(fs.readFileSync(docPath)).digest("hex") !== profile.editorial.sha256) {
+            issues.push({ level: "error", code: "editorial-document-modified", message: `El documento editorial ${doc} no coincide con el original entregado (SHA-256): no debe modificarse` });
+          }
         }
         if (profile.status === "awaiting-editorial-document") {
           issues.push({ level: "warning", code: "profile-pending", message: `El perfil "${project.profile}" aún no tiene incorporado su documento editorial` });

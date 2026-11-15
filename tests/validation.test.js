@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -49,11 +50,29 @@ test("rechaza dimensiones impares", () => {
   assert.ok(codes(res).includes("odd-dimensions"));
 });
 
-test("rechaza un perfil inexistente y avisa del perfil pendiente", () => {
+test("rechaza un perfil inexistente; el perfil de leyendas está activo con su documento íntegro", () => {
   assert.ok(codes(validateProject(makeProject("perfil-x", { ...base(), profile: "no-existe" }, { "storyboard.json": storyboard }))).includes("unknown-profile"));
   const res = validateProject(makeProject("perfil-ok", { ...base(), profile: "latin-american-legends" }, { "storyboard.json": storyboard }));
-  assert.equal(res.ok, true);
-  assert.ok(codes(res).includes("profile-pending"));
+  assert.equal(res.ok, true, JSON.stringify(res.issues));
+  assert.ok(!codes(res).includes("profile-pending"));
+  const bad = validateProject(makeProject("perfil-estilo", { ...base(), artStyle: "clay-diorama", profile: "latin-american-legends" }, { "storyboard.json": storyboard }));
+  assert.ok(codes(bad).includes("style-not-in-profile"), "solo los estilos del documento editorial");
+});
+
+test("documento editorial: incorporado íntegro y protegido frente a modificaciones", () => {
+  const profileDir = path.join(paths.profiles, "latin-american-legends");
+  const profile = JSON.parse(fs.readFileSync(path.join(profileDir, "profile.json"), "utf8"));
+  assert.equal(profile.editorial.document, "editorial/guionista.md");
+  const doc = fs.readFileSync(path.join(profileDir, profile.editorial.document));
+  assert.equal(createHash("sha256").update(doc).digest("hex"), profile.editorial.sha256, "el documento coincide con el original entregado");
+  assert.equal(doc.length, 28812);
+  // Una copia alterada del perfil falla la validación.
+  const fakeProfiles = path.join(tmp, "profiles");
+  fs.cpSync(profileDir, path.join(fakeProfiles, "latin-american-legends"), { recursive: true });
+  fs.appendFileSync(path.join(fakeProfiles, "latin-american-legends", "editorial", "guionista.md"), "\nUna línea añadida.\n");
+  const res = validateProject(makeProject("perfil-alterado", { ...base(), profile: "latin-american-legends" }, { "storyboard.json": storyboard }), { repoPaths: { ...paths, profiles: fakeProfiles } });
+  assert.ok(codes(res).includes("editorial-document-modified"));
+  assert.equal(res.ok, false);
 });
 
 test("detecta escenas duplicadas y storyboard ausente", () => {

@@ -17,7 +17,7 @@
 - **Flujo editorial obligatorio** (Skill `video-production`): A desarrollo editorial con el documento original del perfil, B aprobación explícita del guion (`vf script approve`), C narración manual con `profiles/voices/`, D recepción (`vf voice ingest`) y E producción. Sin guion aprobado no hay narración; sin narración validada no hay render final.
 - **No eludir** las restricciones de red del entorno. Si un host está bloqueado, informar de ello.
 - **No usar servicios de pago.** No ejecutar `hyperframes publish`. Mantener `HYPERFRAMES_NO_TELEMETRY=1`.
-- **No inventar contenido editorial.** El documento del perfil `latin-american-legends` se incorporará íntegro más adelante.
+- **No inventar contenido editorial.** El documento del perfil `latin-american-legends` es `profiles/latin-american-legends/editorial/guionista.md`: original del usuario, íntegro, con el SHA-256 fijado en `profile.json`. Es la fuente obligatoria de la etapa A; se lee completo y no se modifica.
 - **Sin CDNs** en las composiciones: GSAP se carga desde `vendor/` (ver `vendorGsap` en `src/adapters/hyperframes.js`).
 - **Dependencias con versión exacta** (`--save-exact`), elegidas entre publicaciones con algo de recorrido. Ejecutar `npm audit` después de cada cambio.
 - **HyperFrames 0.8.229 es la base provisional.** No actualizarlo sin evaluar antes la compatibilidad con 0.9.46 (pasos en README → Dependencias).

@@ -4,10 +4,20 @@
   "id": "latin-american-legends",
   "name": "Leyendas latinoamericanas",
   "language": "es",
-  "status": "awaiting-editorial-document",
+  "status": "active",
   "editorial": {
     "directory": "editorial",
-    "document": null
+    "document": "editorial/guionista.md",
+    "sha256": "aa7821cbbe8ef0956551e4d9aa3bdf00ffe450c1a347eb0cf141d16d6f22b856"
   },
-  "artStyles": []
+  "artStyles": [
+    "noir-comic",
+    "sumi-ink",
+    "woodblock-print",
+    "knitted-puppet",
+    "painted-codex",
+    "pixel-art",
+    "1930s-cartoon",
+    "paper-cutout"
+  ]
 }

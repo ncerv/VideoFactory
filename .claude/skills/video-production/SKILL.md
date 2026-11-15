@@ -45,9 +45,20 @@ Cada etapa empieza solo cuando la anterior está cerrada. VideoFactory **no gene
 
 ### A. Desarrollo editorial
 
-1. Sigue el **documento editorial original** del perfil: `profiles/<perfil>/editorial/`, con su ruta en `profile.json → editorial.document`. No lo sustituyas, resumas ni reinventes. Si el perfil está en `awaiting-editorial-document`, el documento aún no existe: dilo y detente. No improvises otra metodología.
-2. Con esa metodología: investiga y elige el tema, prepara el guion definitivo y organiza las escenas narrativas (`storyboard.json`).
-3. Escribe en `projects/<id>/script/script.md` el texto completo que se leerá, sin etiquetas expresivas: la interpretación la dirige el perfil vocal. Crea `narration.json` con [templates/narration.json](templates/narration.json).
+1. **Fuente obligatoria:** el documento editorial original del perfil, en la ruta de `profile.json → editorial.document`. Para las leyendas latinoamericanas es `profiles/latin-american-legends/editorial/guionista.md`.
+   - Léelo **completo** antes de trabajar, nunca a partir de fragmentos ni de resúmenes.
+   - Comprueba que su SHA-256 coincide con `profile.json → editorial.sha256` (`npx vf project validate` lo hace en los proyectos del perfil).
+   - Si falta, está incompleto o el hash no coincide, detente y avisa al usuario. No improvises otra metodología.
+   - Si el perfil está en `awaiting-editorial-document`, el documento aún no existe: dilo y detente.
+2. **Sigue el documento tal cual:**
+   - sus órdenes (`TEMAS`, `ELIJO`, `GUION:`…), sus reglas fijas y su orden obligatorio de trabajo;
+   - su registro de temas y su revisión final.
+   - No lo resumas, no lo reinterpretes y no lo mezcles con criterios propios.
+3. **Lo que produce el documento, en VideoFactory:**
+   - el texto corrido para la voz va, sin cambios ni etiquetas, a `projects/<id>/script/script.md`, junto con `narration.json` ([templates/narration.json](templates/narration.json));
+   - las escenas van a `storyboard.json`;
+   - el estilo visual es uno de `profile.json → artStyles`.
+   - La interpretación de la voz la dirige el perfil vocal de `profiles/voices/`.
 4. No empieces la producción audiovisual.
 
 ### B. Aprobación del guion
