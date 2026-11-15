@@ -15,7 +15,8 @@
   },
   "source": {
     "file": "voice/narration.wav",
-    "generator": "Google AI Studio (manual)"
+    "generator": "Google AI Studio (manual)",
+    "sha256": "f1d35525a2e2668410dfc404355d3061980cd8f7db71efaffe07b64371f91eb8"
   },
   "alignment": "none"
 }
