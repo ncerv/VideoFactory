@@ -76,6 +76,7 @@ export function validateProject(projectDir, { repoPaths = paths } = {}) {
     const style = styles.get(id);
     if (!style) issues.push({ level: "error", code: "unknown-art-style", message: `${where}: estilo "${id}" no está en library/art-styles/registry.json` });
     else if (style.dimension !== "2d") issues.push({ level: "error", code: "non-2d-style", message: `${where}: el estilo "${id}" no es 2D` });
+    else if (style.implementation === "pending") issues.push({ level: "warning", code: "style-implementation-pending", message: `${where}: el estilo "${id}" está autorizado, pero su implementación visual está pendiente (sin componentes procedurales probados)` });
     return style;
   };
   checkStyle(project.artStyle, "artStyle");

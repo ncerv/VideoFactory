@@ -50,16 +50,24 @@ Cada etapa empieza solo cuando la anterior está cerrada. VideoFactory **no gene
    - Comprueba que su SHA-256 coincide con `profile.json → editorial.sha256` (`npx vf project validate` lo hace en los proyectos del perfil).
    - Si falta, está incompleto o el hash no coincide, detente y avisa al usuario. No improvises otra metodología.
    - Si el perfil está en `awaiting-editorial-document`, el documento aún no existe: dilo y detente.
-2. **Sigue el documento tal cual:**
+2. **Registro editorial:** al empezar, lee `profiles/latin-american-legends/editorial/registro.md` (Usados, Propuestos y Mi ritmo de voz).
+   - Es el punto de partida del documento («Registro»).
+   - Actualízalo en el archivo cada vez que el documento lo indique, sin inventar datos.
+   - Muéstralo en un bloque de código al final de cada respuesta de temas o de guion, como pide el documento.
+3. **Sigue el documento tal cual:**
    - sus órdenes (`TEMAS`, `ELIJO`, `GUION:`…), sus reglas fijas y su orden obligatorio de trabajo;
    - su registro de temas y su revisión final.
    - No lo resumas, no lo reinterpretes y no lo mezcles con criterios propios.
-3. **Lo que produce el documento, en VideoFactory:**
+4. **Adaptación técnica** (`profiles/latin-american-legends/editorial/compatibilidad.md`): el documento menciona ElevenLabs, pero la voz se genera a mano en Google AI Studio con el perfil `mystery-documentary`.
+   - El «+12 %» del Paso 4 es solo una referencia editorial para contar palabras.
+   - La duración real de la narración manda en la producción.
+   - Esta nota no modifica la metodología; el documento no se edita.
+5. **Lo que produce el documento, en VideoFactory:**
    - el texto corrido para la voz va, sin cambios ni etiquetas, a `projects/<id>/script/script.md`, junto con `narration.json` ([templates/narration.json](templates/narration.json));
    - las escenas van a `storyboard.json`;
    - el estilo visual es uno de `profile.json → artStyles`.
    - La interpretación de la voz la dirige el perfil vocal de `profiles/voices/`.
-4. No empieces la producción audiovisual.
+6. No empieces la producción audiovisual.
 
 ### B. Aprobación del guion
 
@@ -88,7 +96,10 @@ Cada etapa empieza solo cuando la anterior está cerrada. VideoFactory **no gene
 ### E. Producción audiovisual
 
 0. **Puerta:** confirma la entrada a la etapa E (arriba). Sin narración validada no se trabaja en ninguno de los pasos siguientes.
-1. **Tiempo real de la voz:** ajusta el storyboard y `timing.json` a `production.duration`.
+1. **Tiempo real de la voz:** ajusta el storyboard y `timing.json` a `production.duration`, que es la referencia definitiva.
+   - Nunca aceleres, ralentices ni recortes la voz para que encaje.
+   - Si la duración real se aleja del objetivo editorial, informa al usuario: la corrección es editorial (guion, nueva aprobación y nueva narración).
+   - Cuando el usuario confirme los datos, anota palabras y duración real en «Mi ritmo de voz» del registro.
    - Sin alineación precisa, no inventes marcas de tiempo por frase: planifica con el storyboard y la duración real.
    - Si el usuario aporta tiempos medidos, regístralos en `narration.json → segments` con `"alignment": "manual"`.
 2. **Imagen:** visuales con código y animación GSAP, como en [Escena visual](#escena-visual), reutilizando componentes existentes.

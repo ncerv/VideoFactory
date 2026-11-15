@@ -7,10 +7,13 @@ test("el registro contiene los estilos acordados, todos 2D", () => {
   const styles = loadArtStyles();
   const expected = [
     "woodblock-print", "pixel-art", "noir-comic", "1930s-cartoon", "brick-toy", "clay-diorama",
-    "knitted-puppet", "ps2-style", "sumi-ink", "painted-codex", "paper-cutout",
+    "knitted-puppet", "ps2-style", "sumi-ink", "painted-codex", "paper-cutout", "crt-vector",
   ];
   assert.deepEqual([...styles.keys()].sort(), [...expected].sort());
   for (const s of styles.values()) assert.equal(s.dimension, "2d", s.id);
+  const crt = styles.get("crt-vector");
+  assert.equal(crt.implementation, "pending", "CRT Vector autorizado, implementación pendiente");
+  assert.match(crt.summary, /Misterios urbanos o lost media/, "descripción tomada del Paso 10");
 });
 
 test("los servicios de IA están declarados pero no instalados", () => {

@@ -93,6 +93,15 @@
       "dimension": "2d",
       "status": "registered",
       "summary": "Capas de papel recortado con bordes irregulares y sombras suaves de separación."
+    },
+    {
+      "id": "crt-vector",
+      "name": "CRT Vector",
+      "dimension": "2d",
+      "status": "registered",
+      "summary": "Estilo indicado en el Paso 10 del documento editorial para «Misterios urbanos o lost media» (junto con Pixel Art). El documento no da otra definición.",
+      "implementation": "pending",
+      "source": "profiles/latin-american-legends/editorial/guionista.md · Paso 10"
     }
   ]
 }

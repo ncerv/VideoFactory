@@ -31,7 +31,12 @@
             "type": "boolean",
             "description": "El estilo evoca un material o look tridimensional, pero se produce siempre con técnicas 2D."
           },
-          "directory": { "type": "string", "description": "Carpeta con la guía y recursos del estilo (pendiente)." }
+          "directory": { "type": "string", "description": "Carpeta con la guía y recursos del estilo (pendiente)." },
+          "implementation": {
+            "enum": ["pending", "available"],
+            "description": "pending: estilo autorizado sin componentes procedurales funcionales y probados; no se puede producir con él todavía."
+          },
+          "source": { "type": "string", "description": "Origen de la autorización del estilo (p. ej. el documento editorial que lo pide)." }
         }
       }
     }

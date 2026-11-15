@@ -75,6 +75,23 @@ test("documento editorial: incorporado íntegro y protegido frente a modificacio
   assert.equal(res.ok, false);
 });
 
+test("registro editorial: inicializado con la plantilla exacta del documento original", () => {
+  const ed = path.join(paths.profiles, "latin-american-legends", "editorial");
+  const block = (text) => text.match(/```text\n([\s\S]*?)```/)[1];
+  const guion = fs.readFileSync(path.join(ed, "guionista.md"), "utf8");
+  const plantilla = block(guion.slice(guion.indexOf("## Registro")));
+  assert.equal(block(fs.readFileSync(path.join(ed, "registro.md"), "utf8")), plantilla);
+  for (const s of ["USADOS", "PROPUESTOS", "MI RITMO DE VOZ"]) assert.match(plantilla, new RegExp(s));
+  const nota = fs.readFileSync(path.join(ed, "compatibilidad.md"), "utf8");
+  for (const s of ["Google AI Studio", "mystery-documentary", "+12 %", "duración real", "no se acelera"]) assert.ok(nota.includes(s), s);
+});
+
+test("CRT Vector: autorizado por el perfil, con aviso de implementación pendiente", () => {
+  const res = validateProject(makeProject("estilo-crt", { ...base(), artStyle: "crt-vector", profile: "latin-american-legends" }, { "storyboard.json": storyboard }));
+  assert.ok(codes(res).includes("style-implementation-pending"));
+  assert.ok(!codes(res).includes("style-not-in-profile"));
+});
+
 test("detecta escenas duplicadas y storyboard ausente", () => {
   const dup = { schemaVersion: 1, scenes: [{ id: "a", durationSeconds: 1 }, { id: "a", durationSeconds: 1 }] };
   assert.ok(codes(validateProject(makeProject("dup", base(), { "storyboard.json": dup }))).includes("duplicate-scene"));
