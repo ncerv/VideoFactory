@@ -39,7 +39,7 @@ test("vf doctor --json devuelve un informe estructurado", () => {
   assert.equal(typeof report.gpu.available, "boolean");
   assert.ok(Array.isArray(report.limitations));
   assert.equal(report.network, null, "sin --network no se sondea la red");
-  assert.deepEqual(report.services.map((s) => s.kind).sort(), ["alignment", "music"]);
+  assert.deepEqual(report.services.map((s) => s.kind).sort(), ["alignment"]);
 });
 
 test("vf doctor muestra un informe legible", () => {

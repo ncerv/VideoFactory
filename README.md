@@ -125,7 +125,7 @@ src/
   storyboard/ assets/              Etapas del pipeline (pendientes)
   rendering/                       Generación de composiciones y render
   validation/                      Validación de proyectos
-services/python/                   Servicios de IA (sin instalar): music, alignment. No hay servicio de voz: la narración es externa
+services/python/                   Servicios de IA (sin instalar): alignment. Sin servicio de voz (narración externa) ni de música (Tone.js)
 profiles/voices/                   Perfiles vocales para generar la narración a mano
 library/                           art-styles, compositions, motion, materials, transitions, components
 profiles/latin-american-legends/   Perfil editorial (pendiente de su documento)

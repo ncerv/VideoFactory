@@ -71,7 +71,7 @@ test("los archivos de datos del repositorio cumplen sus esquemas", () => {
   const read = (f) => JSON.parse(fs.readFileSync(f, "utf8"));
   assert.deepEqual(validateAgainst("artStyleRegistry", read(paths.artStyleRegistry)), []);
   assert.deepEqual(validateAgainst("profile", read(path.join(paths.profiles, "latin-american-legends", "profile.json"))), []);
-  for (const kind of ["music", "alignment"]) {
+  for (const kind of ["alignment"]) {
     assert.deepEqual(validateAgainst("serviceManifest", read(path.join(paths.pythonServices, kind, "service.json"))), [], kind);
   }
   const tpl = path.join(paths.skill, "templates");

@@ -4,10 +4,12 @@ Python se usa **solo** en estos servicios especializados. Son independientes del
 
 | Carpeta | Tipo | Modelo previsto | Estado |
 |---|---|---|---|
-| [`music/`](music/) | Música | ACE-Step | no instalado |
 | [`alignment/`](alignment/) | Transcripción y alineación | WhisperX | no instalado |
 
-No hay servicio de voz: la narración se genera manualmente fuera de VideoFactory y se recibe con `vf voice ingest` (ver `src/voice/`). El tipo `tts` del contrato queda reservado.
+No hay servicio de voz ni de música:
+- La narración se genera manualmente fuera de VideoFactory y se recibe con `vf voice ingest` (ver `src/voice/`).
+- La música y los efectos se generan solo con Tone.js (`vf audio render`, `src/audio` y `library/audio`).
+- Los tipos `tts` y `music` del contrato quedan reservados.
 
 ## Reglas
 

@@ -46,7 +46,7 @@ uv run --python 3.12 <entrypoint> --request <ruta/request.json> --response <ruta
 | `kind` | `input` |
 |---|---|
 | `tts` | Reservado. Sin servicio: la narración es externa y manual (`vf voice ingest`) |
-| `music` | `{ "prompt", "durationSeconds" }` → audio WAV |
+| `music` | Reservado. Sin servicio: la música es procedural con Tone.js (`vf audio render`) |
 | `alignment` | `{ "audioPath", "language", "text?" }` → JSON con tiempos por palabra |
 
 Estas entradas se cerrarán cuando se implemente cada servicio. El lado Node.js está en `src/adapters/python-service.js`.

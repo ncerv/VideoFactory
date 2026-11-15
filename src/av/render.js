@@ -89,7 +89,7 @@ export function avInputsHash({ manifestFile, settings, video, audio, stems = {},
 
 /**
  * Formato del WAV maestro frente al que exige la salida. Esta etapa no convierte: la mezcla debe
- * llegar ya en PCM a la frecuencia y con los canales de salida (ver src/av/README.md → Voz TTS).
+ * llegar ya en PCM a la frecuencia y con los canales de salida (ver src/av/README.md → Narración).
  */
 export function checkMasterFormat(p, { sampleRate, channels, duration, fps }) {
   const issues = [];

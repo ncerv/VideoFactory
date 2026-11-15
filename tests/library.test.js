@@ -16,8 +16,8 @@ test("el registro contiene los estilos acordados, todos 2D", () => {
 test("los servicios de IA están declarados pero no instalados", () => {
   const services = listServices();
   // La voz no es un servicio local: se genera fuera de VideoFactory y se recibe con vf voice ingest.
-  assert.deepEqual(services.map((s) => s.manifest.plannedModel).sort(), ["ACE-Step", "WhisperX"]);
-  assert.ok(!services.some((s) => s.manifest.kind === "tts"), "no hay servicio TTS local");
+  assert.deepEqual(services.map((s) => s.manifest.plannedModel).sort(), ["WhisperX"]);
+  assert.ok(!services.some((s) => ["tts", "music"].includes(s.manifest.kind)), "ni servicio TTS local ni modelo generativo de música");
   for (const s of services) {
     assert.equal(s.manifest.status, "not-installed");
     assert.equal(s.manifest.python, "3.12");

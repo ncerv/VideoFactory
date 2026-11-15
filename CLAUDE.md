@@ -12,7 +12,7 @@
 
 ## Reglas de trabajo
 
-- **No instalar** modelos ni sus dependencias (ACE-Step, WhisperX…) ni descargar pesos sin una petición expresa.
+- **No instalar** modelos ni sus dependencias (WhisperX…) ni descargar pesos sin una petición expresa. La música y los efectos solo se generan con Tone.js: no hay ni se planifica ningún modelo generativo de música.
 - **Sin motores de voz.** VideoFactory no genera narración: no instalar ni integrar modelos TTS (Kokoro, Qwen3-TTS, VibeVoice, CrispASR, Chatterbox…) ni la API de Google AI Studio. El usuario genera la voz a mano y la entrega en `projects/<id>/voice/`.
 - **Flujo editorial obligatorio** (Skill `video-production`): A desarrollo editorial con el documento original del perfil, B aprobación explícita del guion (`vf script approve`), C narración manual con `profiles/voices/`, D recepción (`vf voice ingest`) y E producción. Sin guion aprobado no hay narración; sin narración validada no hay render final.
 - **No eludir** las restricciones de red del entorno. Si un host está bloqueado, informar de ello.

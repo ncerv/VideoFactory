@@ -25,6 +25,8 @@ Skill portable para producir vídeo **2D** con el motor VideoFactory. Funciona i
 | **Audio procedural** | Música, ambiente o efectos con los generadores existentes; tiempos, niveles, stems | Solo en `projects/<id>/`: `audio.js`, `timing.json` y `audio.json` |
 | **Desarrollar el motor** (excepcional) | Componente o patrón útil para varias escenas, nuevo comando, corregir un fallo del motor | `library/`, `src/`, `schemas/`, `tests/` |
 
+Dentro de la producción de un vídeo, las tareas de escena, audio procedural e integración pertenecen **solo a la etapa E**: no se empiezan antes de recibir y validar la narración. Fuera de una producción (pruebas del motor o escenas de demostración sin narración) se pueden usar libremente.
+
 Ante la duda, es una tarea de escena. Desarrolla el motor solo cuando una necesidad concreta no tenga solución con lo que ya existe **y** vaya a servir a otras escenas.
 
 ## Flujo obligatorio de un vídeo (etapas A–E)
@@ -38,6 +40,8 @@ Cada etapa empieza solo cuando la anterior está cerrada. VideoFactory **no gene
 | **C. Narración manual** | Usuario | Voz generada a mano en Google AI Studio | El usuario entrega el WAV o MP3 |
 | **D. Recepción de la voz** | Claude | `vf voice ingest`: validación, copia de producción y hashes | Informe sin errores |
 | **E. Producción audiovisual** | Claude | Escenas ajustadas a la voz real, música, efectos, mezcla, render y verificación | Comprobaciones en verde |
+
+**Entrada a la etapa E:** `npx vf voice ingest projects/<id>` debe terminar sin errores (`output/voice/narration-report.json → ok: true`) con la narración fijada (`pinned: true`). Si falla o falta el archivo, la producción audiovisual no empieza: ni escenas, ni música, ni mezcla, ni render. Este comando es barato (caché), así que repítelo al retomar el trabajo: detecta si el guion, el perfil o la voz han cambiado.
 
 ### A. Desarrollo editorial
 
@@ -72,6 +76,7 @@ Cada etapa empieza solo cuando la anterior está cerrada. VideoFactory **no gene
 
 ### E. Producción audiovisual
 
+0. **Puerta:** confirma la entrada a la etapa E (arriba). Sin narración validada no se trabaja en ninguno de los pasos siguientes.
 1. **Tiempo real de la voz:** ajusta el storyboard y `timing.json` a `production.duration`.
    - Sin alineación precisa, no inventes marcas de tiempo por frase: planifica con el storyboard y la duración real.
    - Si el usuario aporta tiempos medidos, regístralos en `narration.json → segments` con `"alignment": "manual"`.
@@ -81,7 +86,7 @@ Cada etapa empieza solo cuando la anterior está cerrada. VideoFactory **no gene
    - Cada pista lleva su `gainDb`; no normalices pistas por separado.
    - El ducking atenúa música y ambiente mientras suena la voz. Protege un efecto narrativo importante con `"duck": false`.
    - La sonoridad final se decide sobre la mezcla completa (`loudness`).
-5. **Render e integración:** el render final (`vf render`) solo se hace después de recibir la narración. Después, `vf av render` con `"audio": { "use": "multitrack" }`.
+5. **Render e integración:** `vf render` una sola vez y después `vf av render` con `"audio": { "use": "multitrack" }`. `vf mix render` ya rechaza una narración que no supera la recepción.
 
 ## Escena visual
 
