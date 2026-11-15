@@ -11,6 +11,7 @@ import { buildProject } from "../rendering/build.js";
 import { previewProject } from "../rendering/preview.js";
 import { checkBuild, renderProject, verifyProject } from "../rendering/render-project.js";
 import { renderAudioProject } from "../audio/render.js";
+import { renderAvProject } from "../av/render.js";
 
 const HELP = `vf — VideoFactory
 
@@ -34,6 +35,12 @@ Uso:
   vf audio render <dir> [--force] [--json]
                                        Renderiza offline con Tone.js mezcla y stems WAV (48 kHz, 16 bits,
                                        estéreo) y los verifica. Si nada cambió, no vuelve a renderizar
+
+  Integración audiovisual (av.json: proyecto visual + proyecto de audio):
+  vf av render <dir> [--force] [--json]
+                                       Reutiliza (o genera) el MP4 visual y la mezcla WAV, copia el vídeo
+                                       H.264 y codifica el audio a AAC sin cambiar su ganancia; verifica
+                                       sincronía y duración. --force rehace solo el multiplexado
 
 Opciones:
   --json      Salida en JSON
@@ -114,6 +121,22 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
     try {
       const report = await renderAudioProject(dir, { force: Boolean(values.force), onStep: (name) => values.json || stderr.write(`· ${name}\n`) });
       stdout.write(values.json ? `${JSON.stringify(report, null, 2)}\n` : `${formatAudioReport(report)}\n`);
+      return report.ok ? 0 : 1;
+    } catch (e) {
+      stderr.write(`Error: ${e.message}\n`);
+      return 1;
+    }
+  }
+
+  if (command === "av") {
+    const dir = rest[0];
+    if (sub !== "render" || !dir) {
+      stderr.write("Uso: vf av render <carpeta-del-proyecto> [--force] [--json]\n");
+      return 2;
+    }
+    try {
+      const report = await renderAvProject(dir, { force: Boolean(values.force), onStep: (name) => values.json || stderr.write(`· ${name}\n`) });
+      stdout.write(values.json ? `${JSON.stringify(report, null, 2)}\n` : `${formatAvReport(report)}\n`);
       return report.ok ? 0 : 1;
     } catch (e) {
       stderr.write(`Error: ${e.message}\n`);
@@ -217,6 +240,21 @@ export function formatAudioReport(r) {
   for (const c of v.checks.filter((x) => !x.ok)) lines.push(`  ✗ ${c.name}: ${c.detail}`);
   for (const f of v.externalResources.findings.slice(0, 5)) lines.push(`  ✗ recurso ${f.kind}: ${f.value}`);
   lines.push(`  ${r.timings.total} s · output/${r.files.mix}${v.review ? ` · output/${v.review}` : ""}`);
+  return lines.join("\n");
+}
+
+/** Informe breve de la integración audiovisual: resultado, vídeo, audio, sincronía y solo los fallos. */
+export function formatAvReport(r) {
+  const src = `${r.sources.video.project}${r.sources.video.cached ? " (caché)" : ""} + ${r.sources.audio.project}${r.sources.audio.cached ? " (caché)" : ""}`;
+  if (r.cached) return `= ${r.project}: sin cambios (hash ${r.inputsHash}). ${r.output.file} · fuentes ${src} · usa --force para multiplexar de nuevo`;
+  const v = r.video;
+  const a = r.audio;
+  const lines = [
+    `${r.ok ? "✓" : "✗"} av ${r.project}: ${v.width}x${v.height} · ${v.fps} fps · ${v.frames} fotogramas · ${v.codec} (copiado) + ${a.codec} ${a.profile} ${a.sampleRate} Hz ${a.channels} canales ${Math.round(a.bitRate / 1000)} kb/s · ${r.output.duration.toFixed(3)} s`,
+    `  inicio vídeo ${v.startTime} s / audio ${a.startTime} s · desfase ${a.lagSamples} muestras · ${a.integratedLufs} LUFS · true peak ${a.truePeakDb} dBTP (fuente ${a.source.integratedLufs} LUFS / ${a.source.truePeakDb} dBTP) · Δnivel ${a.levelDiffDb} dB`,
+  ];
+  for (const c of r.checks.filter((x) => !x.ok)) lines.push(`  ✗ ${c.name}: ${c.detail}`);
+  lines.push(`  fuentes ${src} · ${r.timings.total} s · output/${path.basename(r.output.file)} (${(r.output.sizeBytes / 1024 ** 2).toFixed(1)} MB)`);
   return lines.join("\n");
 }
 

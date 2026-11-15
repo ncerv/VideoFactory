@@ -5,3 +5,4 @@
 - `vf --version`
 - `vf doctor [--json] [--network]`
 - `vf project validate [dir] [--json]`
+- `vf av render <dir> [--force] [--json]`: integración audiovisual (`av.json`); `--force` rehace solo el multiplexado

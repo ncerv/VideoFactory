@@ -71,6 +71,18 @@ npx vf audio render projects/audio-engine-test   # mix.wav + stems/*.wav (48 kHz
 - **Motor** (`src/audio`): ruido y reverberaciones con semilla, WAV PCM con dither con semilla, fades, techo de pico, ducking por segmentos de voz y verificación (ffprobe, clipping, sonoridad `ebur128`, bandas y recursos externos).
 - **Voz TTS:** queda como subsistema independiente. El contrato de la mezcla audiovisual final está en `schemas/audio-mix.schema.json`.
 
+## Integración audiovisual
+
+Un proyecto `av.json` declara un proyecto visual y uno de audio, que siguen siendo independientes:
+
+```bash
+npx vf av render projects/av-integration-test   # MP4 final: H.264 copiado + mezcla en AAC 48 kHz estéreo + av-report.json
+```
+
+- Reutiliza las salidas de `vf render` y `vf audio render` mediante sus cachés, y solo las genera si faltan o cambiaron.
+- FFmpeg copia el vídeo sin recodificarlo y codifica la mezcla a AAC sin filtros ni cambios de ganancia: todavía no hay `loudnorm`.
+- Verifica la especificación del vídeo, que los paquetes H.264 son idénticos a los del render visual, el formato del audio, que ambos streams empiezan en 0 y duran lo mismo, el desfase medido por correlación con la mezcla fuente (0 muestras), el nivel conservado, la decodificación completa y que las fuentes no cambian.
+
 ## Arquitectura
 
 | Componente | Papel |

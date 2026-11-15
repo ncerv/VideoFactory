@@ -130,3 +130,4 @@ export default function composition({ duration, sampleRate, timing: T, lib }) {
 | `vf render` | ~60 s, o ~0,3 s si nada cambió |
 | `vf verify` | ~4 s |
 | `vf audio render` (10 s, 5 stems) | ~4 s, o ~0,2 s si nada cambió |
+| `vf av render` (fuentes en caché) | ~5 s, o ~0,4 s si nada cambió |

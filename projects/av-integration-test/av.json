@@ -1,0 +1,10 @@
+{
+  "$schema": "../../schemas/av-project.schema.json",
+  "schemaVersion": 1,
+  "id": "av-integration-test",
+  "title": "Primera integración audiovisual: bosque nocturno",
+  "description": "Une el render de night-forest-test con la mezcla aprobada de audio-engine-test (latido a −11 dB). Sin voz ni normalización: el audio entra con su ganancia original. No es contenido editorial.",
+  "video": { "project": "../night-forest-test", "quality": "looks" },
+  "audio": { "project": "../audio-engine-test", "use": "mix" },
+  "output": { "audio": { "codec": "aac", "bitrate": "192k", "sampleRate": 48000, "channels": 2 } }
+}

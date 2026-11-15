@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://videofactory.local/schemas/av-project.schema.json",
+  "title": "Proyecto de integración audiovisual VideoFactory",
+  "description": "Manifiesto av.json: une el MP4 de un proyecto visual (vf render) con la mezcla WAV de un proyecto de audio (vf audio render) en un MP4 final. Solo referencia los proyectos fuente, que siguen siendo independientes. La mezcla de pistas, la voz y la normalización (schemas/audio-mix.schema.json) son una etapa posterior.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "title", "video", "audio"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$" },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "video": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["project"],
+      "properties": {
+        "project": { "type": "string", "pattern": "^\\.\\./[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$", "description": "Carpeta del proyecto visual, relativa a este proyecto (p. ej. ../night-forest-test)." },
+        "quality": { "enum": ["draft", "looks", "delivery"], "default": "looks", "description": "Calidad del render visual que se reutiliza o se genera." }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["project"],
+      "properties": {
+        "project": { "type": "string", "pattern": "^\\.\\./[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$", "description": "Carpeta del proyecto de audio, relativa a este proyecto (p. ej. ../audio-engine-test)." },
+        "use": { "const": "mix", "default": "mix", "description": "Qué se usa del proyecto de audio: por ahora, su mezcla aprobada (output/mix.wav) sin cambios de ganancia." }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "audio": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "codec": { "const": "aac", "default": "aac" },
+            "bitrate": { "type": "string", "pattern": "^(96|128|160|192|256|320)k$", "default": "192k" },
+            "sampleRate": { "const": 48000, "default": 48000 },
+            "channels": { "const": 2, "default": 2 }
+          }
+        }
+      }
+    }
+  }
+}

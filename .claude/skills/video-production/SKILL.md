@@ -58,6 +58,12 @@ Ante la duda, es una tarea A. Pasa a B solo cuando una necesidad concreta no ten
 4. Como no puedes escuchar, revisa `audio-report.json`: niveles por stem, energía por bandas, `voiceBandDb`, sonoridad y fades. Mira también `review.png`. Deja la banda de 300–3000 Hz despejada si habrá narración.
 5. Todo el audio se sintetiza: sin modelos generativos, bancos de sonidos, archivos descargados ni `Math.random`. La voz TTS es un subsistema aparte: solo se declaran sus segmentos en `audio.json → voice`.
 
+## A″. Unir imagen y sonido
+
+1. Crea `projects/<id>/av.json` (esquema `schemas/av-project.schema.json`). Debe referenciar un proyecto visual y uno de audio hermanos (`"../<visual>"`, `"../<audio>"`). Como modelo, usa `projects/av-integration-test/`.
+2. `npx vf av render projects/<id>` reutiliza en caché el MP4 de `vf render` y la mezcla de `vf audio render`: si faltan, los genera una vez. Después copia el vídeo y codifica el audio a AAC sin tocar su ganancia.
+3. Revisa `output/av-report.json → checks`: sincronía (desfase en muestras), duraciones, vídeo copiado y nivel conservado. Los proyectos fuente no se modifican.
+
 ## B. Desarrollar el motor
 
 1. Lee solo los módulos afectados y sus pruebas.

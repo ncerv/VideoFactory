@@ -12,6 +12,7 @@ export const SCHEMA_FILES = {
   serviceManifest: "service-manifest.schema.json",
   audioProject: "audio-project.schema.json",
   audioMix: "audio-mix.schema.json",
+  avProject: "av-project.schema.json",
 };
 
 let ajv = null;
