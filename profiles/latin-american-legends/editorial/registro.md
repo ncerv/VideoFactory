@@ -14,7 +14,11 @@ USADOS (tema · país · categoría · gancho · cierre · narrador · forma de 
 -
 
 PROPUESTOS:
--
+- La Quema del Diablo · Guatemala · creencias y supersticiones populares
+- El Curupira · Brasil (Amazonía) · criaturas y seres
+- El Caleuche · Chile (Chiloé) · apariciones y fantasmas
+- La bruja lechuza · México (norte) · brujería y nahualismo
+- La casa Matusita · Perú (Lima) · lugares malditos o abandonados
 
 MI RITMO DE VOZ (video · palabras · segundos):
 -
