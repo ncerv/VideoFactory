@@ -103,7 +103,15 @@ async function renderStem(Tone, stem, { duration, sampleRate, channels, timing, 
       sampleRate,
     ),
   );
-  return Array.from({ length: buffer.numberOfChannels }, (_, c) => Float32Array.from(buffer.getChannelData(c)));
+  // Tone.Offline trunca duration × sampleRate: se ajusta al número exacto de muestras esperado
+  // (round), rellenando con silencio o recortando la última muestra si hace falta.
+  const frames = Math.round(duration * sampleRate);
+  return Array.from({ length: buffer.numberOfChannels }, (_, c) => {
+    const data = buffer.getChannelData(c);
+    const out = new Float32Array(frames);
+    out.set(data.subarray(0, Math.min(frames, data.length)));
+    return out;
+  });
 }
 
 /**

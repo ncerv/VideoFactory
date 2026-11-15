@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schemas/audio-project.schema.json",
+  "schemaVersion": 1,
+  "id": "curupira-huellas",
+  "title": "El Curupira: música y efectos",
+  "description": "Ambiente, música y efectos sintetizados con Tone.js para la narración real de 55,32 s. La voz no forma parte de este render: se mezcla con vf mix render.",
+  "source": "audio.js",
+  "timing": "audio-timing.json",
+  "format": { "sampleRate": 48000, "bitDepth": 16, "channels": 2 },
+  "master": { "fadeIn": 0.6, "fadeOut": 1.2, "ceilingDb": -1.5 },
+  "stems": true
+}

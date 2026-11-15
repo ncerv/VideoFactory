@@ -1,0 +1,20 @@
+{
+  "$schema": "../../schemas/project.schema.json",
+  "schemaVersion": 1,
+  "id": "curupira-huellas",
+  "title": "Siguió unas huellas hacia el río y nunca llegó",
+  "description": "Leyenda del Curupira (Brasil, Amazonía). Guion v1 aprobado y narración real de 55,32 s. Escena 2D en estilo Sumi Ink, hecha solo con SVG, Canvas procedural, CSS y GSAP.",
+  "language": "es",
+  "profile": "latin-american-legends",
+  "artStyle": "sumi-ink",
+  "output": { "width": 1080, "height": 1920, "fps": 30, "format": "mp4" },
+  "rendering": {
+    "engine": "hyperframes",
+    "dimension": "2d",
+    "source": "scene.js",
+    "timing": "timing.json",
+    "buildDir": "build",
+    "entry": "build/index.html"
+  },
+  "storyboard": "storyboard.json"
+}

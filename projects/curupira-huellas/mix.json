@@ -1,0 +1,18 @@
+{
+  "$schema": "../../schemas/audio-mix.schema.json",
+  "schemaVersion": 1,
+  "duration": 55.333333,
+  "video": "output/curupira-huellas.mp4",
+  "tracks": [
+    { "id": "narracion", "role": "voice", "source": { "type": "narration" }, "start": 0 },
+    { "id": "drone", "role": "music", "source": { "type": "stem", "stem": "output/stems/drone.wav" }, "gainDb": 0 },
+    { "id": "pulso", "role": "music", "source": { "type": "stem", "stem": "output/stems/pulse.wav" }, "gainDb": 0 },
+    { "id": "rio", "role": "ambience", "source": { "type": "stem", "stem": "output/stems/river.wav" }, "gainDb": 0 },
+    { "id": "insectos", "role": "ambience", "source": { "type": "stem", "stem": "output/stems/insects.wav" }, "gainDb": 0 },
+    { "id": "silbido", "role": "sfx", "source": { "type": "stem", "stem": "output/stems/whistle.wav" }, "gainDb": 0, "duck": false },
+    { "id": "foley", "role": "sfx", "source": { "type": "stem", "stem": "output/stems/foley.wav" }, "gainDb": 0 },
+    { "id": "revelacion", "role": "sfx", "source": { "type": "stem", "stem": "output/stems/reveal.wav" }, "gainDb": 0 }
+  ],
+  "ducking": { "amountDb": -8, "attack": 0.25, "release": 0.6, "roles": ["music", "ambience"] },
+  "loudness": { "mode": "linear", "integratedLufs": -16, "truePeakDb": -1 }
+}

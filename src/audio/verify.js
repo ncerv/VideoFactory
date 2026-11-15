@@ -74,7 +74,9 @@ export function auditAudioSources({ projectDir, sources = [] }) {
   const findings = [];
   const walk = (dir) =>
     fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-      if (e.name === "output" || e.name.startsWith(".")) return [];
+      // Salidas y construcciones generadas, y voice/: la narración que entrega el usuario es una
+      // entrada legítima del flujo (vf voice ingest), no una muestra de terceros.
+      if (["output", "build", "build-preview", "voice", "node_modules"].includes(e.name) || e.name.startsWith(".")) return [];
       const p = path.join(dir, e.name);
       return e.isDirectory() ? walk(p) : [p];
     });

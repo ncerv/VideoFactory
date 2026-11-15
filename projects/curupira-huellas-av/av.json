@@ -1,0 +1,10 @@
+{
+  "$schema": "../../schemas/av-project.schema.json",
+  "schemaVersion": 1,
+  "id": "curupira-huellas-av",
+  "title": "Siguió unas huellas hacia el río y nunca llegó",
+  "description": "Integración final de El Curupira: escena Sumi Ink de curupira-huellas y su mezcla multipista (narración real + música y efectos de Tone.js).",
+  "video": { "project": "../curupira-huellas", "quality": "looks" },
+  "audio": { "project": "../curupira-huellas", "use": "multitrack" },
+  "output": { "audio": { "codec": "aac", "bitrate": "192k", "sampleRate": 48000, "channels": 2 } }
+}

@@ -1,0 +1,23 @@
+{
+  "$comment": "Música y efectos (segundos) sobre la narración real de 55,32 s. Los efectos caen en pausas detectadas en la voz (aproximación, no alineación medida).",
+  "duration": 55.333333,
+  "seed": 20261116,
+  "drone": { "notes": ["A1", "E2"], "start": 0, "end": 55.333333, "attack": 3, "release": 2.5, "gainDb": -17, "cutoff": 240, "lfo": { "rate": 0.06, "depth": 0.4 } },
+  "dawn": { "notes": ["E3", "B3"], "start": 40.6, "end": 47.2, "attack": 1.6, "release": 2.2, "gainDb": -27, "cutoff": 900, "wave": "triangle" },
+  "river": [{ "start": 0, "end": 20.5, "release": 2.4 }, { "start": 40.4, "end": 55.333333, "release": 1.2 }],
+  "riverSound": { "color": "brown", "center": [160, 520], "q": 0.7, "gainDb": -24, "gustStep": 1.6, "intensity": [0.5, 1], "whistle": null },
+  "insects": { "start": 0, "end": 55.333333, "color": "white", "center": [3800, 6200], "q": 2.5, "gainDb": -36, "gustStep": 0.5, "intensity": [0.3, 1], "whistle": null, "seed": 9 },
+  "pulse": { "start": 17.0, "end": 31.6, "bpm": 54, "accelerando": 70, "intensity": [0.2, 0.8], "gainDb": -19, "pitch": 46 },
+  "whistles": [
+    { "at": 9.95, "dur": 1.6, "gainDb": -19, "f": [1900, 2600, 2150], "pan": 0.5 },
+    { "at": 22.9, "dur": 1.3, "gainDb": -15, "f": [2000, 2700, 2300], "pan": -0.2 },
+    { "at": 36.35, "dur": 0.9, "gainDb": -29, "f": [1800, 2400, 2000], "pan": 0.6 },
+    { "at": 47.95, "dur": 0.6, "gainDb": -23, "f": [2100, 2500, 2200], "pan": 0.1 }
+  ],
+  "drop": { "at": 2.45, "gainDb": -26, "body": 1300, "drop": 0.4, "decay": 0.12, "click": -30 },
+  "creak": { "at": 26.85, "gainDb": -26, "body": 260, "drop": 0.3, "decay": 0.09, "click": -18 },
+  "thud": { "at": 28.78, "gainDb": -15, "body": 52, "drop": 2, "decay": 0.9, "click": -30 },
+  "name": { "at": 32.2, "note": "C#5", "gainDb": -25, "distance": 0.82, "pan": 0.3 },
+  "trace": { "start": 48.6, "duration": 1.7, "from": 1400, "to": 260, "gainDb": -27, "peakAt": 0.3, "color": "brown", "seed": 5 },
+  "space": { "seconds": 3.5, "decay": 3.0, "preDelay": 0.03, "damping": 0.6, "wet": 0.45, "seed": 13, "highcut": 5200 }
+}
