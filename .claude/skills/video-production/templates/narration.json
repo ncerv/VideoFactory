@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "mi-proyecto",
+  "script": { "file": "script/script.md", "version": "v1", "status": "draft" },
+  "voiceProfile": { "id": "mystery-documentary" },
+  "source": { "file": "voice/narration.wav", "generator": "Google AI Studio (manual)" },
+  "alignment": "none",
+  "segments": [
+    { "id": "escena-1", "scene": "escena-1", "text": "Primer bloque del guion aprobado." }
+  ]
+}

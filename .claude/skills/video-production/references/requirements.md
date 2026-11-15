@@ -10,7 +10,7 @@
 | Git | Cualquiera reciente | Recomendada | Control de versiones | https://git-scm.com |
 | uv | Reciente | Solo IA | Entornos Python aislados | https://docs.astral.sh/uv/ |
 | Python | 3.12 | Solo IA | Servicios de IA | `uv python install 3.12` |
-| GPU (CUDA o Apple Silicon) | — | Recomendada para IA | TTS, música y alineación | — |
+| GPU (CUDA o Apple Silicon) | — | No | Solo para futuros servicios de IA (alineación) | — |
 
 ## Variables de entorno reconocidas
 

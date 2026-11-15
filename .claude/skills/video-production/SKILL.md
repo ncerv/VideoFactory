@@ -1,6 +1,6 @@
 ---
 name: video-production
-description: Producción de vídeo 2D con VideoFactory, con HyperFrames para componer, Chromium para renderizar y FFmpeg para procesar y exportar. Úsala para crear o ajustar escenas, previsualizarlas, validarlas y renderizarlas; para comprobar si el entorno está listo; para ampliar el motor; o para trabajar con estilos artísticos, perfiles editoriales y servicios de IA (voz, música, alineación).
+description: Producción de vídeo 2D con VideoFactory, con HyperFrames para componer, Chromium para renderizar y FFmpeg para procesar y exportar. Úsala para producir un vídeo completo con el flujo editorial obligatorio (guion, aprobación, narración manual, recepción de la voz y producción); para crear o ajustar escenas, audio procedural y mezclas; para previsualizar, validar y renderizar; para comprobar el entorno; para ampliar el motor; o para trabajar con estilos artísticos y perfiles editoriales.
 ---
 
 # video-production
@@ -13,20 +13,77 @@ Skill portable para producir vídeo **2D** con el motor VideoFactory. Funciona i
 |---|---|
 | [references/catalog.md](references/catalog.md) | **Lo primero que hay que consultar al crear una escena**: componentes, patrones de movimiento, texturas y contrato de `scene.js` |
 | [references/](references/) | Arquitectura, requisitos, pipeline, notas de HyperFrames y estilos (solo cuando hagan falta) |
-| [templates/](templates/) | Plantillas de `project.json`, `storyboard.json` y composición HyperFrames |
+| [templates/](templates/) | Plantillas de `project.json`, `storyboard.json`, `narration.json`, `mix.json` y composición HyperFrames |
 | [scripts/](scripts/) | `detect-environment.mjs`: diagnóstico portable del entorno (solo Node.js 22+) |
 
 ## Primero: ¿qué tipo de tarea es?
 
 | Tarea | Ejemplos | Dónde se trabaja |
 |---|---|---|
-| **A. Crear o ajustar una escena** (la habitual) | Nueva escena, cambiar colores, tiempos, encuadre, capas o animaciones de un proyecto | Solo en `projects/<id>/`: `scene.js`, `timing.json` y los manifiestos |
-| **A′. Crear o ajustar el audio de una escena** | Música, ambiente o efectos con los generadores existentes; tiempos, niveles, stems | Solo en `projects/<id>/`: `audio.js`, `timing.json` y `audio.json` |
-| **B. Desarrollar el motor** (excepcional) | Componente o patrón de movimiento útil para varias escenas, nuevo comando, corregir un fallo del motor | `library/`, `src/`, `schemas/`, `tests/` |
+| **Producir un vídeo completo** | Una leyenda de principio a fin | El [flujo obligatorio A–E](#flujo-obligatorio-de-un-vídeo-etapas-ae), sin saltarse etapas |
+| **Escena visual** (la habitual) | Nueva escena, cambiar colores, tiempos, encuadre, capas o animaciones de un proyecto | Solo en `projects/<id>/`: `scene.js`, `timing.json` y los manifiestos |
+| **Audio procedural** | Música, ambiente o efectos con los generadores existentes; tiempos, niveles, stems | Solo en `projects/<id>/`: `audio.js`, `timing.json` y `audio.json` |
+| **Desarrollar el motor** (excepcional) | Componente o patrón útil para varias escenas, nuevo comando, corregir un fallo del motor | `library/`, `src/`, `schemas/`, `tests/` |
 
-Ante la duda, es una tarea A. Pasa a B solo cuando una necesidad concreta no tenga solución con lo que ya existe **y** vaya a servir a otras escenas.
+Ante la duda, es una tarea de escena. Desarrolla el motor solo cuando una necesidad concreta no tenga solución con lo que ya existe **y** vaya a servir a otras escenas.
 
-## A. Crear o ajustar una escena
+## Flujo obligatorio de un vídeo (etapas A–E)
+
+Cada etapa empieza solo cuando la anterior está cerrada. VideoFactory **no genera voz**: la narración se genera fuera, a mano, y se recibe como archivo.
+
+| Etapa | Quién | Resultado | Para avanzar |
+|---|---|---|---|
+| **A. Desarrollo editorial** | Claude | Tema elegido, guion definitivo, escenas narrativas y texto completo de la voz | Guion completo |
+| **B. Aprobación del guion** | Usuario | Versión editorial definitiva (`vf script approve`) | Aprobación **explícita** del usuario |
+| **C. Narración manual** | Usuario | Voz generada a mano en Google AI Studio | El usuario entrega el WAV o MP3 |
+| **D. Recepción de la voz** | Claude | `vf voice ingest`: validación, copia de producción y hashes | Informe sin errores |
+| **E. Producción audiovisual** | Claude | Escenas ajustadas a la voz real, música, efectos, mezcla, render y verificación | Comprobaciones en verde |
+
+### A. Desarrollo editorial
+
+1. Sigue el **documento editorial original** del perfil: `profiles/<perfil>/editorial/`, con su ruta en `profile.json → editorial.document`. No lo sustituyas, resumas ni reinventes. Si el perfil está en `awaiting-editorial-document`, el documento aún no existe: dilo y detente. No improvises otra metodología.
+2. Con esa metodología: investiga y elige el tema, prepara el guion definitivo y organiza las escenas narrativas (`storyboard.json`).
+3. Escribe en `projects/<id>/script/script.md` el texto completo que se leerá, sin etiquetas expresivas: la interpretación la dirige el perfil vocal. Crea `narration.json` con [templates/narration.json](templates/narration.json).
+4. No empieces la producción audiovisual.
+
+### B. Aprobación del guion
+
+- El usuario revisa el guion y puede pedir cambios. Aplícalos y vuelve a presentarlo.
+- Solo tras su aprobación explícita: `npx vf script approve projects/<id> [--script-version vN]`. El guion y el perfil vocal quedan fijados por SHA-256. Si el guion cambia después, la recepción de la voz se detiene hasta una nueva aprobación.
+
+### C. Narración manual (no la generes)
+
+- Entrega al usuario:
+  - el texto aprobado de `script/script.md`;
+  - el perfil vocal `profiles/voices/<id>.md` (actualmente `mystery-documentary`) para copiarlo en Google AI Studio;
+  - la indicación de que la generación es manual.
+- No uses la API de Google ni ninguna otra herramienta o modelo TTS, y no pidas claves.
+- El usuario guarda el archivo descargado como `projects/<id>/voice/narration.wav` o `.mp3`, según indique `narration.json → source.file`.
+
+### D. Recepción de la voz
+
+- `npx vf voice ingest projects/<id> --pin`. Revisa `output/voice/narration-report.json`. El informe recoge:
+  - formato, frecuencia, canales, duración y profundidad de bits;
+  - la copia de producción PCM a 48 kHz y estéreo, con soxr cuando hay que remuestrear;
+  - la duración conservada y la ausencia de clipping;
+  - los hashes del guion, del perfil y de la voz.
+- **El original no se modifica nunca** y `voice/` no se versiona: no subas grabaciones a GitHub.
+- Si hay errores (por ejemplo, la conversión recortaría), no sigas: informa al usuario y pide otra exportación. No cambies la ganancia por tu cuenta.
+
+### E. Producción audiovisual
+
+1. **Tiempo real de la voz:** ajusta el storyboard y `timing.json` a `production.duration`.
+   - Sin alineación precisa, no inventes marcas de tiempo por frase: planifica con el storyboard y la duración real.
+   - Si el usuario aporta tiempos medidos, regístralos en `narration.json → segments` con `"alignment": "manual"`.
+2. **Imagen:** visuales con código y animación GSAP, como en [Escena visual](#escena-visual), reutilizando componentes existentes.
+3. **Música y efectos:** Tone.js, como en [Audio procedural](#audio-procedural). Deja libre la banda de 300–3000 Hz.
+4. **Mezcla:** `mix.json` ([templates/mix.json](templates/mix.json)) y después `npx vf mix render projects/<id>`.
+   - Cada pista lleva su `gainDb`; no normalices pistas por separado.
+   - El ducking atenúa música y ambiente mientras suena la voz. Protege un efecto narrativo importante con `"duck": false`.
+   - La sonoridad final se decide sobre la mezcla completa (`loudness`).
+5. **Render e integración:** el render final (`vf render`) solo se hace después de recibir la narración. Después, `vf av render` con `"audio": { "use": "multitrack" }`.
+
+## Escena visual
 
 1. **No reexplores.** Lee [references/catalog.md](references/catalog.md) y el `scene.js` de un proyecto parecido (por ejemplo `projects/night-forest-test/`). No releas toda la documentación ni audites el repositorio. Ejecuta `npx vf doctor` solo si el entorno es nuevo o algo falla.
 2. **Compón con lo que hay:**
@@ -50,17 +107,17 @@ Ante la duda, es una tarea A. Pasa a B solo cuando una necesidad concreta no ten
 - No reconsideres decisiones de arquitectura ya establecidas sin un problema concreto y demostrado.
 - **Informes breves.** Resultado, tiempos y errores. No repitas lo que ya muestran la CLI o el informe JSON.
 
-## A′. Audio de una escena
+## Audio procedural
 
 1. Lee la sección de audio de [references/catalog.md](references/catalog.md) y el `audio.js` de `projects/audio-engine-test/`.
 2. Compón con los generadores de `library/audio` (drone, viento, pulso, resonancia, whoosh, impacto, espacio). Los tiempos van en `timing.json`; usa `gainDb` como pico aproximado de cada capa.
 3. `npx vf audio render projects/<id>` (~4 s) genera la mezcla y los stems y los verifica. Itera sobre él: es barato y no repite el render si nada cambió.
 4. Como no puedes escuchar, revisa `audio-report.json`: niveles por stem, energía por bandas, `voiceBandDb`, sonoridad y fades. Mira también `review.png`. Deja la banda de 300–3000 Hz despejada si habrá narración.
-5. Todo el audio se sintetiza: sin modelos generativos, bancos de sonidos, archivos descargados ni `Math.random`. La voz TTS es un subsistema aparte: solo se declaran sus segmentos en `audio.json → voice`.
+5. La música y los efectos se sintetizan: sin modelos generativos, bancos de sonidos, archivos descargados ni `Math.random`. La voz no se sintetiza en VideoFactory: llega por la etapa D y se mezcla con `vf mix render`.
 
-## A″. Unir imagen y sonido
+## Imagen y sonido
 
-1. Crea `projects/<id>/av.json` (esquema `schemas/av-project.schema.json`). Debe referenciar un proyecto visual y uno de audio hermanos (`"../<visual>"`, `"../<audio>"`). Como modelo, usa `projects/av-integration-test/`.
+1. Crea `projects/<id>/av.json` (esquema `schemas/av-project.schema.json`). Debe referenciar un proyecto visual y uno de audio hermanos (`"../<visual>"`, `"../<audio>"`). El audio puede ser la mezcla procedural (`"use": "mix"`) o la mezcla con narración de un proyecto con `mix.json` (`"use": "multitrack"`). Como modelo, usa `projects/av-integration-test/`.
 2. `npx vf av render projects/<id>` reutiliza en caché el MP4 de `vf render` y la mezcla de `vf audio render`: si faltan, los genera una vez. Después copia el vídeo y codifica el audio a AAC sin tocar su ganancia.
 3. Revisa `output/av-report.json → checks`: sincronía al principio y al final, duraciones, muestras y relleno AAC, vídeo copiado, nivel, bandas y presencia de cada stem. Los proyectos fuente no se modifican.
 4. Eficiencia sin perder calidad:
@@ -69,7 +126,7 @@ Ante la duda, es una tarea A. Pasa a B solo cuando una necesidad concreta no ten
    - **WAV maestro:** es la referencia sin pérdida. El AAC es solo para la entrega; no edites ni sustituyas el WAV.
    - **Comprobaciones:** no se omiten nunca. Una entrega con `checks` en rojo no es válida.
 
-## B. Desarrollar el motor
+## Desarrollar el motor
 
 1. Lee solo los módulos afectados y sus pruebas.
 2. Un componente o patrón nuevo debe ser genérico: parámetros en lugar de valores de una escena concreta, determinista con semilla, solo 2D y sin recursos externos. Documéntalo en [references/catalog.md](references/catalog.md) y en el README de su carpeta.
@@ -89,6 +146,8 @@ Ante la duda, es una tarea A. Pasa a B solo cuando una necesidad concreta no ten
 - **Sin CDNs en las composiciones.** GSAP y cualquier otra librería se cargan desde una copia local (`vendor/`).
 - **Sin telemetría ni publicación.** Ejecuta HyperFrames con `HYPERFRAMES_NO_TELEMETRY=1` y no uses `hyperframes publish`, que sube el proyecto a un servicio externo.
 - **No inventes contenido editorial.** Si un perfil tiene el estado `awaiting-editorial-document`, su documento todavía no existe: no lo reconstruyas.
+- **Sin voz generada aquí.** No instales ni integres modelos TTS (locales o por API). La narración se genera manualmente fuera y se recibe con `vf voice ingest`.
+- **Puertas del flujo:** sin aprobación explícita del guion no hay narración; sin narración validada no hay render final.
 - **Sin servicios de pago** ni descargas de modelos que no se hayan pedido expresamente.
 - **No eludas restricciones de red.** Si un host está bloqueado, informa de ello y propone una alternativa local.
 

@@ -37,7 +37,7 @@
     "stems": { "type": "boolean", "default": true, "description": "Exportar además cada stem por separado." },
     "voice": {
       "type": "object",
-      "description": "Narración (subsistema independiente). Los segmentos los aportará el servicio TTS; aquí solo se declaran tiempos y ducking.",
+      "description": "Ventanas de voz para atenuar los stems de este proyecto (ducking dentro de vf audio render). La narración real se recibe con vf voice ingest y se mezcla con vf mix render.",
       "additionalProperties": false,
       "properties": {
         "segments": {
@@ -51,7 +51,7 @@
               "start": { "type": "number", "minimum": 0 },
               "end": { "type": "number", "minimum": 0 },
               "text": { "type": "string" },
-              "file": { "type": "string", "description": "WAV generado por el servicio TTS (futuro)." }
+              "file": { "type": "string", "description": "Archivo de voz asociado (informativo)." }
             }
           }
         },

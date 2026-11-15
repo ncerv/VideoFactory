@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://videofactory.local/schemas/narration.schema.json",
+  "title": "Narración de un proyecto VideoFactory",
+  "description": "Manifiesto narration.json. Vincula el guion aprobado (versión editorial definitiva), el perfil vocal y la narración que el usuario genera fuera de VideoFactory y entrega como WAV o MP3. VideoFactory no genera voz: solo recibe, valida y prepara el archivo. Los hashes fijan qué versión del guion y de la voz se usan; si cambian, la recepción se detiene.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "script", "voiceProfile", "source"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$", "description": "Igual al nombre de la carpeta del proyecto." },
+    "script": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "version", "status"],
+      "properties": {
+        "file": { "type": "string", "pattern": "^[^/\\\\][^:]*\\.(md|txt)$", "description": "Guion dentro del proyecto (p. ej. script/script.md). Contiene exactamente el texto que se usa para generar la voz." },
+        "version": { "type": "string", "minLength": 1, "description": "Versión editorial (p. ej. v1, v2)." },
+        "status": { "enum": ["draft", "approved"], "description": "approved solo tras la aprobación explícita del usuario (vf script approve)." },
+        "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$", "description": "Hash del guion aprobado. Lo fija vf script approve." },
+        "approvedAt": { "type": ["string", "null"], "description": "Fecha ISO de la aprobación." }
+      }
+    },
+    "voiceProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Perfil de profiles/voices/<id>.md, copiado a mano en la herramienta externa." },
+        "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$", "description": "Hash del perfil usado. Lo fija vf script approve." }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file"],
+      "properties": {
+        "file": { "type": "string", "pattern": "^voice/[^/\\\\]+\\.(wav|mp3)$", "description": "Archivo entregado por el usuario, dentro de voice/. Es una entrada del proyecto: nunca se modifica ni se versiona." },
+        "generator": { "type": "string", "description": "Herramienta con la que el usuario generó la voz (informativo, p. ej. \"Google AI Studio (manual)\")." },
+        "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$", "description": "Hash de la narración aceptada. Lo fija vf voice ingest --pin; si el archivo cambia, la recepción falla." }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "description": "Escenas o frases del guion. start/end solo cuando se conozcan con precisión (alignment = manual); nunca se deducen de la duración total.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "scene": { "type": "string" },
+          "text": { "type": "string" },
+          "start": { "type": "number", "minimum": 0 },
+          "end": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "alignment": {
+      "enum": ["none", "manual"],
+      "default": "none",
+      "description": "none: sin tiempos por frase (se planifica con el storyboard y la duración real). manual: tiempos de segments medidos y registrados a mano."
+    }
+  }
+}

@@ -4,9 +4,10 @@ Python se usa **solo** en estos servicios especializados. Son independientes del
 
 | Carpeta | Tipo | Modelo previsto | Estado |
 |---|---|---|---|
-| [`tts/`](tts/) | Síntesis de voz | Qwen3-TTS | no instalado |
 | [`music/`](music/) | Música | ACE-Step | no instalado |
 | [`alignment/`](alignment/) | Transcripción y alineación | WhisperX | no instalado |
+
+No hay servicio de voz: la narración se genera manualmente fuera de VideoFactory y se recibe con `vf voice ingest` (ver `src/voice/`). El tipo `tts` del contrato queda reservado.
 
 ## Reglas
 

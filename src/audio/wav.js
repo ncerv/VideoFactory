@@ -55,7 +55,11 @@ export function decodeWav(buffer) {
   while (pos + 8 <= buffer.length) {
     const id = buffer.toString("ascii", pos, pos + 4);
     const size = buffer.readUInt32LE(pos + 4);
-    if (id === "fmt ") fmt = { format: buffer.readUInt16LE(pos + 8), channels: buffer.readUInt16LE(pos + 10), sampleRate: buffer.readUInt32LE(pos + 12), bitDepth: buffer.readUInt16LE(pos + 22) };
+    if (id === "fmt ") {
+      fmt = { format: buffer.readUInt16LE(pos + 8), channels: buffer.readUInt16LE(pos + 10), sampleRate: buffer.readUInt32LE(pos + 12), bitDepth: buffer.readUInt16LE(pos + 22) };
+      // WAVE_FORMAT_EXTENSIBLE (FFmpeg lo usa a partir de 24 bits): el formato real va en el subformato.
+      if (fmt.format === 0xfffe && size >= 40) fmt.format = buffer.readUInt16LE(pos + 8 + 24);
+    }
     if (id === "data") data = { start: pos + 8, size };
     pos += 8 + size + (size % 2);
   }

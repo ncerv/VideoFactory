@@ -27,7 +27,7 @@
       "required": ["project"],
       "properties": {
         "project": { "type": "string", "pattern": "^\\.\\./[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$", "description": "Carpeta del proyecto de audio, relativa a este proyecto (p. ej. ../audio-engine-test)." },
-        "use": { "const": "mix", "default": "mix", "description": "Qué se usa del proyecto de audio: por ahora, su mezcla aprobada (output/mix.wav) sin cambios de ganancia." }
+        "use": { "enum": ["mix", "multitrack"], "default": "mix", "description": "mix: la mezcla procedural del proyecto de audio (audio.json → output/mix.wav). multitrack: la mezcla con narración del proyecto (mix.json → output/mix/mix.wav, vf mix render). En ambos casos sin cambios de ganancia al multiplexar." }
       }
     },
     "output": {

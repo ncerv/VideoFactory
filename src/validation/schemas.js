@@ -13,6 +13,7 @@ export const SCHEMA_FILES = {
   audioProject: "audio-project.schema.json",
   audioMix: "audio-mix.schema.json",
   avProject: "av-project.schema.json",
+  narration: "narration.schema.json",
 };
 
 let ajv = null;

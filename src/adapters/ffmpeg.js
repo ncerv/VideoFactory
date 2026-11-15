@@ -86,3 +86,35 @@ export async function decodeAudioPcm(file, { channels = 2, sampleRate = 48000 } 
   const frames = all.length / channels;
   return Array.from({ length: channels }, (_, c) => Float32Array.from({ length: frames }, (_, i) => all[i * channels + c]));
 }
+
+let soxrCache;
+/** ¿Está FFmpeg compilado con libsoxr (remuestreador de alta calidad)? */
+export async function hasSoxr() {
+  if (soxrCache === undefined) {
+    const { stdout, stderr } = await run(requireBinary("ffmpeg"), ["-hide_banner", "-buildconf"]);
+    soxrCache = /--enable-libsoxr/.test(stdout + stderr);
+  }
+  return soxrCache;
+}
+
+/**
+ * Convierte un audio a WAV PCM de 24 bits a `sampleRate` y estéreo, sin cambiar la ganancia:
+ * remuestreo con soxr si está disponible (si no, el de FFmpeg) y, para mono, el mismo canal en
+ * izquierda y derecha. Más de dos canales se rechaza: no se hace downmix implícito.
+ * @returns { args, resampler, channelMap }
+ */
+export async function convertToPcmStereo({ input, output, inputSampleRate, inputChannels, sampleRate = 48000 }) {
+  if (inputChannels > 2) throw new Error(`${inputChannels} canales: solo se admiten mono o estéreo (no se hace downmix automático)`);
+  const filters = [];
+  let resampler = null;
+  if (inputSampleRate !== sampleRate) {
+    resampler = (await hasSoxr()) ? "soxr" : "swr";
+    filters.push(resampler === "soxr" ? `aresample=${sampleRate}:resampler=soxr:precision=28` : `aresample=${sampleRate}`);
+  }
+  const channelMap = inputChannels === 1 ? "mono→estéreo (mismo canal en L y R)" : "estéreo";
+  if (inputChannels === 1) filters.push("pan=stereo|c0=c0|c1=c0");
+  const args = ["-y", "-v", "error", "-nostdin", "-i", input, "-map", "0:a:0", ...(filters.length ? ["-af", filters.join(",")] : []), "-ac", "2", "-ar", String(sampleRate), "-c:a", "pcm_s24le", "-map_metadata", "-1", "-fflags", "+bitexact", "-flags:a", "+bitexact", "-f", "wav", output];
+  const { code, stderr } = await run(requireBinary("ffmpeg"), args);
+  if (code !== 0) throw new Error(`ffmpeg (conversión de audio) falló: ${stderr.trim()}`);
+  return { args: args.map((a) => (a === input || a === output ? "<archivo>" : a)), resampler, channelMap };
+}

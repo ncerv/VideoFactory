@@ -12,6 +12,8 @@ import { previewProject } from "../rendering/preview.js";
 import { checkBuild, renderProject, verifyProject } from "../rendering/render-project.js";
 import { renderAudioProject } from "../audio/render.js";
 import { renderAvProject } from "../av/render.js";
+import { renderMixProject } from "../mix/render.js";
+import { approveScript, ingestNarration } from "../voice/narration.js";
 
 const HELP = `vf — VideoFactory
 
@@ -35,6 +37,20 @@ Uso:
   vf audio render <dir> [--force] [--json]
                                        Renderiza offline con Tone.js mezcla y stems WAV (48 kHz, 16 bits,
                                        estéreo) y los verifica. Si nada cambió, no vuelve a renderizar
+
+  Narración externa (narration.json: guion aprobado + perfil vocal + voz entregada en voice/):
+  vf script approve <dir> [--script-version v]
+                                       Etapa B: tras la aprobación explícita del usuario, fija la versión
+                                       editorial definitiva (SHA-256 del guion y del perfil vocal)
+  vf voice ingest <dir> [--pin] [--force] [--json]
+                                       Etapa D: valida el WAV/MP3 generado manualmente frente al guion
+                                       aprobado, conserva el original y crea la copia PCM 48 kHz estéreo
+                                       (soxr). --pin fija el SHA-256 de la narración aceptada
+
+  Mezcla multipista (mix.json: narración + música + efectos):
+  vf mix render <dir> [--force] [--json]
+                                       Ganancia por pista, ducking de música/ambiente durante la voz y
+                                       normalización final de la mezcla completa → output/mix/mix.wav
 
   Integración audiovisual (av.json: proyecto visual + proyecto de audio):
   vf av render <dir> [--force | --force-video | --force-audio | --force-all] [--json]
@@ -81,6 +97,8 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
         "force-video": { type: "boolean" },
         "force-audio": { type: "boolean" },
         "force-all": { type: "boolean" },
+        pin: { type: "boolean" },
+        "script-version": { type: "string" },
         at: { type: "string" },
         frames: { type: "string" },
         video: { type: "boolean" },
@@ -135,6 +153,30 @@ export async function main(argv = process.argv.slice(2), { stdout = process.stdo
     try {
       const report = await renderAudioProject(dir, { force: Boolean(values.force), onStep: (name) => values.json || stderr.write(`· ${name}\n`) });
       stdout.write(values.json ? `${JSON.stringify(report, null, 2)}\n` : `${formatAudioReport(report)}\n`);
+      return report.ok ? 0 : 1;
+    } catch (e) {
+      stderr.write(`Error: ${e.message}\n`);
+      return 1;
+    }
+  }
+
+  if (command === "script" || command === "voice" || command === "mix") {
+    const dir = rest[0];
+    const usage = { script: "vf script approve <dir> [--script-version v]", voice: "vf voice ingest <dir> [--pin] [--force] [--json]", mix: "vf mix render <dir> [--force] [--json]" }[command];
+    const expected = { script: "approve", voice: "ingest", mix: "render" }[command];
+    if (sub !== expected || !dir) {
+      stderr.write(`Uso: ${usage}\n`);
+      return 2;
+    }
+    const onStep = (name) => values.json || stderr.write(`· ${name}\n`);
+    try {
+      if (command === "script") {
+        const r = approveScript(dir, { version: values["script-version"] });
+        stdout.write(values.json ? `${JSON.stringify(r, null, 2)}\n` : `✓ guion aprobado: ${r.project} · ${r.script.file} versión ${r.script.version} · sha256 ${r.script.sha256.slice(0, 12)}… · perfil vocal ${r.voiceProfile.id}\n`);
+        return 0;
+      }
+      const report = command === "voice" ? await ingestNarration(dir, { pin: Boolean(values.pin), force: Boolean(values.force), onStep }) : await renderMixProject(dir, { force: Boolean(values.force), onStep });
+      stdout.write(values.json ? `${JSON.stringify(report, null, 2)}\n` : `${command === "voice" ? formatVoiceReport(report) : formatMixReport(report)}\n`);
       return report.ok ? 0 : 1;
     } catch (e) {
       stderr.write(`Error: ${e.message}\n`);
@@ -270,6 +312,28 @@ export function formatAvReport(r) {
   ];
   for (const c of r.checks.filter((x) => !x.ok)) lines.push(`  ✗ ${c.name}: ${c.detail}`);
   lines.push(`  fuentes ${src} · ${r.timings.total} s · output/${path.basename(r.output.file)} (${(r.output.sizeBytes / 1024 ** 2).toFixed(1)} MB)`);
+  return lines.join("\n");
+}
+
+/** Informe breve de la recepción de la narración. */
+export function formatVoiceReport(r) {
+  const s = r.source;
+  const p = r.production;
+  const head = `${r.cached ? "=" : r.ok ? "✓" : "✗"} voz ${r.project}: ${s.file} · ${s.codec} ${s.sampleRate} Hz ${s.channels} canal${s.channels > 1 ? "es" : ""}${s.bitDepth ? ` ${s.bitDepth} bits` : ""}${s.lossy ? " (con pérdida)" : ""} · ${s.duration.toFixed(3)} s`;
+  const lines = [head, `  guion ${r.script.file} ${r.script.version} (${r.script.sha256.slice(0, 12)}…) · perfil ${r.voiceProfile.id} · fuente ${s.sha256.slice(0, 12)}…${r.pinned ? " (fijada)" : " (sin fijar: usa --pin para fijarla)"}`];
+  lines.push(`  producción ${p.file}${p.converted ? ` (convertida: ${p.resampler ?? "sin remuestreo"}, ${p.channelMap})` : " (original, sin copia)"} · ${p.samples} muestras = ${p.duration.toFixed(3)} s`);
+  for (const c of r.checks.filter((x) => !x.ok)) lines.push(`  ${c.level === "warning" ? "!" : "✗"} ${c.name}: ${c.detail}`);
+  return lines.join("\n");
+}
+
+/** Informe breve de la mezcla multipista. */
+export function formatMixReport(r) {
+  if (r.cached) return `= mezcla ${r.project}: sin cambios (hash ${r.inputsHash}). output/${r.files.mix} · usa --force para regenerar`;
+  const m = r.master;
+  const lines = [`${r.ok ? "✓" : "✗"} mezcla ${r.project}: ${Object.keys(r.tracks).length} pistas · ${r.duration} s · ${m.after.integratedLufs} LUFS · ${m.after.truePeakDb} dBTP · master ${m.gainDb >= 0 ? "+" : ""}${m.gainDb} dB (${m.mode})`];
+  lines.push(`  voz: ${r.activity.windows.length} tramos (${r.activity.source}) · atenuadas: ${Object.entries(r.tracks).filter(([, t]) => t.ducked).map(([id]) => id).join(", ") || "ninguna"}`);
+  for (const c of r.checks.filter((x) => !x.ok || x.level === "warning")) lines.push(`  ${c.level === "warning" ? "!" : "✗"} ${c.name}: ${c.detail}`);
+  lines.push(`  ${r.timings.total} s · output/${r.files.mix}`);
   return lines.join("\n");
 }
 

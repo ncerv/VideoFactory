@@ -1,53 +1,73 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://videofactory.local/schemas/audio-mix.schema.json",
-  "title": "Plan de mezcla audiovisual (contrato futuro)",
-  "description": "Hoja de mezcla final de un vídeo: pistas generadas (música, ambiente, efectos), narración segmentada del servicio TTS, eventos sincronizados con la imagen, ducking y normalización con FFmpeg. vf aún no la ejecuta; fija la interfaz para que la voz se incorpore sin tocar los generadores.",
+  "title": "Plan de mezcla multipista",
+  "description": "mix.json: hoja de mezcla de un vídeo. Une la narración entregada por el usuario (narration.json), stems procedurales (vf audio render) y efectos, con ganancia por pista, ducking de la música durante la voz y normalización final sobre la mezcla completa. La ejecuta vf mix render.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "duration", "tracks", "loudness"],
   "properties": {
+    "$schema": { "type": "string" },
     "schemaVersion": { "const": 1 },
-    "duration": { "type": "number", "exclusiveMinimum": 0 },
-    "video": { "type": "string", "description": "MP4 final de vf render (sin audio)." },
+    "duration": { "type": "number", "exclusiveMinimum": 0, "description": "Duración de la mezcla en segundos (la del vídeo). La narración no se recorta: si no cabe, la mezcla falla." },
+    "video": { "type": "string", "description": "MP4 final de vf render (sin audio). Informativo." },
     "tracks": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["id", "role", "source"],
         "properties": {
-          "id": { "type": "string" },
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
           "role": { "enum": ["music", "ambience", "sfx", "voice"] },
           "source": {
             "oneOf": [
-              { "type": "object", "additionalProperties": false, "required": ["type", "stem"], "properties": { "type": { "const": "stem" }, "stem": { "type": "string", "description": "Ruta a un WAV de output/stems/ generado por vf audio render." } } },
-              { "type": "object", "additionalProperties": false, "required": ["type", "segments"], "properties": { "type": { "const": "tts" }, "segments": { "type": "array", "items": { "type": "object", "required": ["id", "start", "file"], "properties": { "id": { "type": "string" }, "start": { "type": "number" }, "file": { "type": "string", "description": "WAV original del servicio TTS (cualquier frecuencia, mono o estéreo). Se conserva intacto y se convierte una sola vez a 48 kHz estéreo antes de mezclar (estrategia en src/av/README.md)." }, "text": { "type": "string" } } } } } }
+              { "type": "object", "additionalProperties": false, "required": ["type", "stem"], "properties": { "type": { "const": "stem" }, "stem": { "type": "string", "description": "WAV PCM 48 kHz estéreo, relativo al proyecto de mezcla (p. ej. ../audio-engine-test/output/stems/drone.wav). Si está dentro de la salida de un proyecto de audio hermano, vf mix render lo regenera antes con su caché." } } },
+              { "type": "object", "additionalProperties": false, "required": ["type"], "properties": { "type": { "const": "narration" } }, "description": "La narración del proyecto: copia de producción que prepara vf voice ingest a partir de narration.json." },
+              { "type": "object", "additionalProperties": false, "required": ["type", "segments"], "description": "Voz entregada en varios archivos (contrato reservado; vf mix render todavía no lo ejecuta: entrega un único archivo completo).", "properties": { "type": { "const": "tts" }, "segments": { "type": "array", "items": { "type": "object", "required": ["id", "start", "file"], "properties": { "id": { "type": "string" }, "start": { "type": "number" }, "file": { "type": "string", "description": "Archivo de voz externo (cualquier frecuencia, mono o estéreo). Se conserva intacto y se convierte una sola vez a 48 kHz estéreo antes de mezclar." }, "text": { "type": "string" } } } } } }
             ]
           },
-          "start": { "type": "number", "minimum": 0, "default": 0 },
-          "gainDb": { "type": "number", "default": 0 },
-          "duckedBy": { "type": "string", "description": "id de la pista que provoca el ducking (normalmente la voz)." }
+          "start": { "type": "number", "minimum": 0, "default": 0, "description": "Inicio de la pista en la mezcla (segundos)." },
+          "gainDb": { "type": "number", "default": 0, "description": "Ganancia fija de la pista. No se normaliza cada pista por separado." },
+          "duckedBy": { "type": "string", "description": "id de la pista que provoca el ducking (normalmente la narración). Activa el ducking aunque el rol no esté en ducking.roles." },
+          "duck": { "type": "boolean", "description": "false: esta pista nunca se atenúa (p. ej. un efecto narrativo importante). true: se atenúa aunque su rol no esté en ducking.roles." }
         }
       }
     },
     "events": {
       "type": "array",
-      "description": "Efectos asociados a acontecimientos de la escena (tiempos en segundos del vídeo).",
+      "description": "Efectos asociados a acontecimientos de la escena (tiempos en segundos del vídeo). Contrato reservado.",
       "items": { "type": "object", "required": ["at", "generator"], "properties": { "at": { "type": "number" }, "generator": { "type": "string" }, "params": { "type": "object" } } }
     },
     "ducking": {
       "type": "object",
       "additionalProperties": false,
-      "properties": { "amountDb": { "type": "number", "maximum": 0 }, "attack": { "type": "number" }, "release": { "type": "number" } }
+      "properties": {
+        "amountDb": { "type": "number", "maximum": 0, "default": -8 },
+        "attack": { "type": "number", "minimum": 0, "default": 0.25 },
+        "release": { "type": "number", "minimum": 0, "default": 0.6 },
+        "roles": { "type": "array", "items": { "enum": ["music", "ambience", "sfx"] }, "default": ["music", "ambience"], "description": "Roles que se atenúan por defecto mientras suena la voz. Los efectos (sfx) no, salvo que se pida." },
+        "detection": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Detección de actividad de la voz por energía cuando narration.json no tiene tiempos manuales. Marca dónde hay voz, no dónde empieza cada frase.",
+          "properties": {
+            "thresholdDb": { "type": "number", "maximum": 0, "default": -40, "description": "Nivel RMS (dBFS) a partir del cual una ventana de 20 ms cuenta como voz." },
+            "holdSeconds": { "type": "number", "minimum": 0, "default": 0.35, "description": "Silencios más cortos que esto no levantan el ducking (pausas entre palabras)." },
+            "minSeconds": { "type": "number", "minimum": 0, "default": 0.1, "description": "Ráfagas de voz más cortas que esto se ignoran." }
+          }
+        }
+      }
     },
     "loudness": {
       "type": "object",
       "additionalProperties": false,
       "required": ["integratedLufs", "truePeakDb"],
       "properties": {
-        "integratedLufs": { "type": "number", "description": "Objetivo de normalización (FFmpeg loudnorm); -14 LUFS para redes sociales." },
-        "truePeakDb": { "type": "number", "maximum": 0 }
+        "mode": { "enum": ["linear", "none"], "default": "linear", "description": "linear: una sola ganancia sobre la mezcla completa para acercarse a integratedLufs sin superar truePeakDb (sin compresión ni limitador). none: sin normalización; solo se verifica el techo." },
+        "integratedLufs": { "type": "number", "description": "Objetivo de sonoridad de la mezcla completa (p. ej. -14 LUFS para redes sociales)." },
+        "truePeakDb": { "type": "number", "maximum": 0, "description": "Techo de pico verdadero (dBTP). Tiene prioridad sobre el objetivo de sonoridad." }
       }
     }
   }

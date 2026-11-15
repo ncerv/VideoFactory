@@ -20,7 +20,7 @@
           "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
           "title": { "type": "string" },
           "durationSeconds": { "type": "number", "exclusiveMinimum": 0, "maximum": 600 },
-          "narration": { "type": "string", "description": "Texto de narración (entrada para TTS)." },
+          "narration": { "type": "string", "description": "Texto de narración de la escena (parte del guion aprobado que el usuario leerá con la voz)." },
           "visualNotes": { "type": "string", "description": "Indicaciones visuales 2D para la escena." },
           "artStyle": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Sustituye el estilo del proyecto en esta escena." },
           "composition": { "type": "string", "description": "Archivo HyperFrames de la escena, relativo al proyecto." },

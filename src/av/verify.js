@@ -53,7 +53,8 @@ export function measureLag(ref, test, { maxLag = 2048, window = 12000, from = 0,
       tE += t * t;
     }
     const c = acc / (rNorm * (Math.sqrt(tE) || 1));
-    if (c > peak) [peak, lag] = [c, l];
+    // Empates (señales periódicas): gana el desfase más pequeño en valor absoluto.
+    if (c > peak + 1e-6 || (Math.abs(c - peak) <= 1e-6 && Math.abs(l) < Math.abs(lag))) [peak, lag] = [c, l];
   }
   return { lag, correlation: r3(peak), windowStart: best, window };
 }

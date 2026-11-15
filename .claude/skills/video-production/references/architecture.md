@@ -8,7 +8,9 @@
                └─────────────────┼──────────┼─────────────────────────────────────────────────────────┘
                                  │          │  contrato cli-json (archivos JSON)
                                  ▼          ▼
-                     Servicios Python 3.12 aislados (uv): TTS · música · alineación
+                     Servicios Python 3.12 aislados (uv): música · alineación (sin instalar)
+
+ Narración: generada a mano fuera (Google AI Studio) → projects/<id>/voice/ → vf voice ingest → vf mix render
 ```
 
 ## Decisiones

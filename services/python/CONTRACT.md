@@ -45,7 +45,7 @@ uv run --python 3.12 <entrypoint> --request <ruta/request.json> --response <ruta
 
 | `kind` | `input` |
 |---|---|
-| `tts` | `{ "text", "language", "voice" }` → audio WAV |
+| `tts` | Reservado. Sin servicio: la narración es externa y manual (`vf voice ingest`) |
 | `music` | `{ "prompt", "durationSeconds" }` → audio WAV |
 | `alignment` | `{ "audioPath", "language", "text?" }` → JSON con tiempos por palabra |
 

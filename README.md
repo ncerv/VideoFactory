@@ -69,7 +69,22 @@ npx vf audio render projects/audio-engine-test   # mix.wav + stems/*.wav (48 kHz
 
 - **Generadores** (`library/audio`): drone, viento, pulso, resonancia, whoosh, impacto, espacio y eco.
 - **Motor** (`src/audio`): ruido y reverberaciones con semilla, WAV PCM con dither con semilla, fades, techo de pico, ducking por segmentos de voz y verificación (ffprobe, clipping, sonoridad `ebur128`, bandas y recursos externos).
-- **Voz TTS:** queda como subsistema independiente. El contrato de la mezcla audiovisual final está en `schemas/audio-mix.schema.json`.
+- **Voz:** VideoFactory no la genera. Ver «Flujo editorial y narración».
+
+## Flujo editorial y narración
+
+Cada vídeo sigue cinco etapas: **A** desarrollo editorial (con el documento editorial del perfil), **B** aprobación explícita del guion, **C** narración generada a mano por el usuario en Google AI Studio con el perfil `profiles/voices/mystery-documentary.md`, **D** recepción de la voz y **E** producción audiovisual. Detalle en la Skill `video-production`.
+
+```bash
+npx vf script approve projects/<id>        # etapa B: fija la versión editorial definitiva (SHA-256 del guion y del perfil vocal)
+npx vf voice ingest projects/<id> --pin    # etapa D: valida voice/narration.wav|mp3, conserva el original y crea la copia PCM 48 kHz estéreo (soxr)
+npx vf mix render projects/<id>            # mezcla narración + música + efectos: ganancias, ducking y normalización final
+```
+
+- `narration.json` (`schemas/narration.schema.json`) vincula guion aprobado, perfil vocal y archivo de voz por SHA-256. Si cualquiera cambia, la recepción se detiene.
+- `voice/` es una entrada del proyecto: no se modifica ni se versiona. La copia de producción va en `output/voice/`.
+- `mix.json` (`schemas/audio-mix.schema.json`): el ducking atenúa música y ambiente mientras suena la voz (detección por energía o tiempos manuales); los efectos no se atenúan salvo que se pida. La normalización es una sola ganancia sobre la mezcla completa, sin superar el techo de pico verdadero.
+- `vf av render` con `"audio": { "use": "multitrack" }` une el vídeo con esa mezcla.
 
 ## Integración audiovisual
 
@@ -106,10 +121,12 @@ src/
   cli/                             CLI vf
   orchestrator/                    Pipeline y diagnóstico del entorno
   adapters/                        HyperFrames, FFmpeg y servicios Python
-  storyboard/ assets/ audio/       Etapas del pipeline (pendientes)
+  audio/ voice/ mix/ av/           Audio procedural, recepción de narración, mezcla multipista e integración
+  storyboard/ assets/              Etapas del pipeline (pendientes)
   rendering/                       Generación de composiciones y render
   validation/                      Validación de proyectos
-services/python/                   Servicios de IA: tts (Qwen3-TTS), music (ACE-Step), alignment (WhisperX)
+services/python/                   Servicios de IA (sin instalar): music, alignment. No hay servicio de voz: la narración es externa
+profiles/voices/                   Perfiles vocales para generar la narración a mano
 library/                           art-styles, compositions, motion, materials, transitions, components
 profiles/latin-american-legends/   Perfil editorial (pendiente de su documento)
 projects/                          Proyectos de vídeo (example-minimal incluido)

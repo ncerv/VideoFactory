@@ -18,6 +18,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ffmpegVersion, muxAudioVideo } from "../adapters/ffmpeg.js";
 import { renderAudioProject } from "../audio/render.js";
+import { renderMixProject } from "../mix/render.js";
 import { probeWav } from "../audio/verify.js";
 import { hashFiles, moduleGraph } from "../orchestrator/fingerprint.js";
 import { paths } from "../orchestrator/paths.js";
@@ -33,7 +34,7 @@ export const AV_DEFAULTS = { quality: "looks", audio: { codec: "aac", bitrate: "
 /** Proveedores de fuentes por defecto: los motores reales con su caché. Las pruebas los sustituyen. */
 export const DEFAULT_PROVIDERS = {
   video: (dir, { quality, force, onStep }) => renderProject(dir, { quality, force, onStep }),
-  audio: (dir, { force, onStep }) => renderAudioProject(dir, { force, onStep }),
+  audio: (dir, { force, onStep, use = "mix" }) => (use === "multitrack" ? renderMixProject(dir, { force, onStep }) : renderAudioProject(dir, { force, onStep })),
 };
 
 /** Traduce las opciones de la CLI a la política de forzado por etapa. */
@@ -60,9 +61,11 @@ export function loadAvProject(projectDir) {
     return d;
   };
   const videoDir = resolveSource(manifest.video.project, "video.project", "project.json");
-  const audioDir = resolveSource(manifest.audio.project, "audio.project", "audio.json");
+  const use = manifest.audio.use ?? "mix";
+  const audioDir = resolveSource(manifest.audio.project, "audio.project", use === "multitrack" ? "mix.json" : "audio.json");
   const settings = {
     quality: manifest.video.quality ?? AV_DEFAULTS.quality,
+    audioUse: use,
     audio: { ...AV_DEFAULTS.audio, ...(manifest.output?.audio ?? {}) },
   };
   return { dir, file, manifest, videoDir, audioDir, settings };
@@ -142,7 +145,7 @@ export async function renderAvProject(projectDir, { onStep = () => {}, providers
   // Fuentes: cada proyecto conserva su flujo y su caché; solo se regeneran si se pide expresamente.
   const visual = await step("video", () => providers.video(videoDir, { quality: settings.quality, force: force.video, onStep: sub("video") }));
   if (!visual.ok) throw new Error(`El render visual de ${visual.project} no es correcto`);
-  const sound = await step("audio", () => providers.audio(audioDir, { force: force.audio, onStep: sub("audio") }));
+  const sound = await step("audio", () => providers.audio(audioDir, { force: force.audio, use: settings.audioUse, onStep: sub("audio") }));
   if (!sound.ok) throw new Error(`El render de audio de ${sound.project} no es correcto`);
 
   const videoFile = path.resolve(videoDir, visual.files.video);

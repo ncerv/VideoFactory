@@ -49,20 +49,11 @@ Las comprobaciones de calidad se ejecutan siempre que se multiplexa. La caché s
   - La CLI de FFmpeg, al decodificar, descarta el retardo inicial pero entrega el resto de la última trama: ⌈(N + 1024) / 1024⌉ · 1024 − 1024 − N muestras de silencio (`expectedAacPadding`). Son 256 para 10 s, 384 para 35 s y 640 para 45 s.
   - La verificación exige exactamente ese relleno, con pico < −80 dBFS. No es desfase ni alarga el vídeo.
 
-## Voz TTS (siguiente etapa): estrategia de conversión
+## Narración
 
-Esta etapa sigue exigiendo un maestro PCM a 48 kHz y en estéreo, con la misma duración que el vídeo, y rechaza lo demás sin convertir (`checkMasterFormat`). La voz entrará por la etapa de **mezcla** (`schemas/audio-mix.schema.json`, segmentos `tts`), no por el multiplexado:
+Esta etapa sigue exigiendo un maestro PCM a 48 kHz y en estéreo con la misma duración que el vídeo, y rechaza lo demás sin convertir (`checkMasterFormat`). La voz no entra aquí directamente:
 
-1. **Original intacto.** Se conserva el WAV del servicio TTS tal como llega (p. ej. 24 kHz mono), como maestro de la voz.
-2. **Conversión única y documentada** a 48 kHz estéreo, en PCM de 24 bits o float como intermedio:
-   - Comando: `aresample=48000:resampler=soxr:precision=28` y, para mono, `pan=stereo|c0=c0|c1=c0`.
-   - Disponibilidad: el FFmpeg 6.1 del entorno incluye libsoxr. Una prueba de 24 kHz mono → 48 kHz estéreo dio el número exacto de muestras.
-   - El cambio de nivel por mono → estéreo se mide **después** de la conversión: BS.1770 suma la potencia de los canales, así que la voz duplicada suena +3 dB en LUFS respecto de la medida en mono.
-3. **Comprobaciones de la conversión** (se añadirán con TTS):
-   - muestras = round(N · 48000 / fs) con ±1 de tolerancia;
-   - inicio del segmento en la muestra round(start · 48000);
-   - desfase 0 frente a la fuente remuestreada, con la misma `measureLag`;
-   - sin clipping ni sobreoscilación del remuestreador por encima del techo;
-   - diferencia de RMS < 0,1 dB por canal frente a la fuente;
-   - los dos canales idénticos si la fuente era mono.
-4. La mezcla con voz, el ducking y la normalización final producen un nuevo WAV maestro a 48 kHz y en estéreo. `vf av render` lo recibe igual que hoy.
+1. El usuario la genera a mano fuera de VideoFactory y la entrega en `projects/<id>/voice/`.
+2. `vf voice ingest` (`src/voice`) conserva el original y crea la copia PCM a 48 kHz y estéreo, con soxr y las comprobaciones de duración, clipping, nivel y desfase.
+3. `vf mix render` (`src/mix`) la mezcla con música y efectos, con ducking y normalización final.
+4. `av.json` con `"audio": { "use": "multitrack" }` multiplexa esa mezcla.

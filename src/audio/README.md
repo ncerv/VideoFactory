@@ -19,6 +19,6 @@ Motor de audio procedural. Genera música y efectos **solo con síntesis**: Tone
   - El guardián de `Math.random` hace fallar cualquier uso accidental.
   - Dos generaciones independientes producen WAV idénticos byte a byte.
 - **Stems y mezcla:** cada stem se renderiza por separado, con su propia instancia del espacio acústico (misma semilla). Fades y techo se aplican igual a todos, así que Σ stems = mezcla.
-- **Voz:** es un subsistema independiente. `audio.json → voice.segments` atenúa (ducking) los stems de rol `music`/`ambience` sin tocar los generadores. Los WAV de voz los aportará el servicio TTS (`services/python/tts`).
+- **Voz:** no se sintetiza. `audio.json → voice.segments` solo atenúa (ducking) los stems de rol `music` y `ambience` de este proyecto. La narración real se recibe con `vf voice ingest` (`src/voice`) y se mezcla con `vf mix render` (`src/mix`).
 - **Integración con la imagen:** `vf av render` (`src/av`) multiplexa la mezcla con el MP4 visual sin modificarla.
-- **Mezcla audiovisual futura:** el contrato está en `schemas/audio-mix.schema.json` (pistas, segmentos TTS, eventos, ducking y objetivo de sonoridad para normalizar con FFmpeg `loudnorm`).
+- **Mezcla multipista:** `vf mix render` ejecuta `schemas/audio-mix.schema.json` (narración, stems, ducking y normalización final).

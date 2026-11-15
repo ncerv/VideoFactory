@@ -52,7 +52,8 @@ test("av.json: el proyecto de referencia cumple el contrato y los errores se det
   const bad = (patch) => validateAgainst("avProject", { ...ref, ...patch }).length > 0;
   assert.ok(bad({ video: { project: "/abs/night-forest-test" } }), "ruta absoluta");
   assert.ok(bad({ audio: { project: "../../fuera" } }), "fuera de projects/");
-  assert.ok(bad({ audio: { project: "../audio-engine-test", use: "stems" } }), "solo la mezcla aprobada");
+  assert.ok(bad({ audio: { project: "../audio-engine-test", use: "stems" } }), "solo mezcla procedural o multipista");
+  assert.ok(!bad({ audio: { project: "../demo-mezcla", use: "multitrack" } }), "mezcla multipista");
   assert.ok(bad({ output: { audio: { bitrate: "1000k" } } }), "tasa de bits");
   assert.ok(bad({ output: { audio: { sampleRate: 44100 } } }), "48 kHz");
   const { audio, ...noAudio } = ref;
@@ -73,7 +74,7 @@ test("loadAvProject resuelve proyectos hermanos y rechaza referencias incorrecta
   const ok = loadAvProject(make("av-ok"));
   assert.equal(ok.videoDir, path.join(root, "vis-a"));
   assert.equal(ok.audioDir, path.join(root, "aud-a"));
-  assert.deepEqual(ok.settings, { quality: "looks", audio: { codec: "aac", bitrate: "192k", sampleRate: 48000, channels: 2 } });
+  assert.deepEqual(ok.settings, { quality: "looks", audioUse: "mix", audio: { codec: "aac", bitrate: "192k", sampleRate: 48000, channels: 2 } });
   assert.throws(() => loadAvProject(make("av-id", { id: "otro-id" })), /no coincide/);
   assert.throws(() => loadAvProject(make("av-swap", { video: { project: "../aud-a" } })), /project\.json/);
   assert.throws(() => loadAvProject(make("av-none", { audio: { project: "../no-existe" } })), /audio\.json/);

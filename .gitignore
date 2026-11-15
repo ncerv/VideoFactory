@@ -48,3 +48,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.log
+
+# Narraciones entregadas por el usuario: entradas personales, nunca en git
+projects/*/voice/*
+!projects/*/voice/README.md
+!projects/*/voice/.gitkeep
